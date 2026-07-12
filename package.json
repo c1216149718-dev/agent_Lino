@@ -7,7 +7,7 @@
     "dev": "vite",
     "dev:api": "node server/index.mjs",
     "start": "node server/index.mjs",
-    "build": "vite build",
+    "build": "vite build && node scripts/prepare-sites-build.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test:e2e": "playwright test"
