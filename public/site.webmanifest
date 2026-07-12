@@ -1,0 +1,17 @@
+{
+  "name": "Lino 对话空间",
+  "short_name": "Lino",
+  "description": "一个温和、可靠、本地优先的 AI 对话智能体网站原型。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
