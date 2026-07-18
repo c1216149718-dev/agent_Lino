@@ -12,7 +12,7 @@ export default defineConfig({
     timeout: 5_000,
   },
   use: {
-    baseURL: 'http://127.0.0.1:5173',
+    baseURL: 'http://127.0.0.1:5175',
     browserName: 'chromium',
     launchOptions: fs.existsSync(chromePath)
       ? {
@@ -23,9 +23,9 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: 'pnpm dev --host 127.0.0.1 --port 5173 --strictPort',
+    command: 'pnpm dev --strictPort',
     reuseExistingServer: !process.env.CI,
     timeout: 20_000,
-    url: 'http://127.0.0.1:5173',
+    url: 'http://127.0.0.1:5175',
   },
 })
