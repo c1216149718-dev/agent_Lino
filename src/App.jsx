@@ -3,6 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { BackgroundClouds } from './components/BackgroundClouds'
 import { ChatStage } from './components/ChatStage'
 import { IdleStage } from './components/IdleStage'
+import { useCloudAccount } from './hooks/useCloudAccount'
+import { useMailbox } from './hooks/useMailbox'
 import { useStoredChat } from './hooks/useStoredChat'
 
 function App() {
@@ -11,6 +13,8 @@ function App() {
   const [isEntering, setIsEntering] = useState(false)
   const pendingMessageRef = useRef('')
   const chat = useStoredChat()
+  const mailbox = useMailbox()
+  const account = useCloudAccount({ chat, mailbox })
   const sendMessageRef = useRef(chat.sendMessage)
 
   useEffect(() => {
@@ -72,7 +76,13 @@ function App() {
         {stage === 'idle' ? (
           <IdleStage key="idle" onBegin={enterChat} />
         ) : (
-          <ChatStage key="chat" chat={chat} isEntering={isEntering} />
+          <ChatStage
+            account={account}
+            chat={chat}
+            isEntering={isEntering}
+            key="chat"
+            mailbox={mailbox}
+          />
         )}
       </AnimatePresence>
     </main>

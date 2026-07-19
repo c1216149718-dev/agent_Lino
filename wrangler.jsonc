@@ -6,6 +6,16 @@
   "vars": {
     "DEEPSEEK_MODEL": "deepseek-v4-flash"
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "lino-agent-home-db",
+      "database_id": "906b1b2b-67b9-42a9-baf9-5d5c4d34062e"
+    }
+  ],
+  "triggers": {
+    "crons": ["*/10 0 * * *"]
+  },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",

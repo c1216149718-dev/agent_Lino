@@ -5,23 +5,27 @@ import {
   Download,
   History,
   Lock,
+  Mail,
   Menu,
   MessageCircle,
   Plus,
   RotateCcw,
   ShieldCheck,
   Sparkles,
-  Smile,
   Trash2,
   Upload,
   X,
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { moodOptions } from '../data/mailbox'
 import { suggestedPrompts } from '../data/seed'
+import { AccountPanel } from './AccountPanel'
 import { BentoCard } from './BentoCard'
 import { Composer } from './Composer'
 import { LinoMascot } from './LinoMascot'
+import { MailboxPanel } from './MailboxPanel'
 import { ConversationActions, MessageBubble } from './MessageBubble'
+import { MobileDrawer } from './MobileDrawer'
 
 const ambientStates = [
   'idle',
@@ -40,10 +44,10 @@ const ambientStates = [
 
 const deskViews = [
   { id: 'chat', label: '对话', icon: MessageCircle },
-  { id: 'mood', label: '情绪', icon: Smile },
+  { id: 'mood', label: '信箱', icon: Mail },
   { id: 'memory', label: '记忆', icon: Archive },
   { id: 'actions', label: '行动', icon: Sparkles },
-  { id: 'local', label: '本地', icon: ShieldCheck },
+  { id: 'local', label: '账户', icon: ShieldCheck },
 ]
 
 const moodFaces = [
@@ -83,7 +87,7 @@ function ComicNav({ activeView, onChange }) {
   return (
     <nav
       aria-label="Lino 工作台视图"
-      className="comic-tabs relative z-20 -mt-2 grid grid-cols-5 gap-2 pb-1 pt-2 sm:flex"
+      className="comic-tabs relative z-20 -mt-2 hidden gap-2 pb-1 pt-2 md:flex"
     >
       {deskViews.map((view) => {
         const Icon = view.icon
@@ -110,7 +114,7 @@ function ComicNav({ activeView, onChange }) {
   )
 }
 
-function ChatPanel({ chat, focusMessageId, isEntering, onFocusHandled }) {
+function ChatPanel({ chat, focusMessageId, isEntering, mailbox, onFocusHandled, onOpenMailbox }) {
   const bottomRef = useRef(null)
   const messageRefs = useRef(new Map())
   const [editingMessageId, setEditingMessageId] = useState(null)
@@ -155,6 +159,15 @@ function ChatPanel({ chat, focusMessageId, isEntering, onFocusHandled }) {
         </div>
         <span className="text-3xl font-bold leading-none text-neutral-950">...</span>
       </div>
+
+      <button className="mobile-chat-status md:hidden" onClick={onOpenMailbox} type="button">
+        <span
+          className="mini-mood-dot"
+          style={{ background: moodOptions.find((mood) => mood.id === mailbox.todayMood?.moodId)?.color ?? '#D7D3C8' }}
+        />
+        <span>{mailbox.todayMood ? `今天：${moodOptions.find((mood) => mood.id === mailbox.todayMood.moodId)?.label}` : '记录今天的心情'}</span>
+        {mailbox.unreadReplies.length ? <strong>{mailbox.unreadReplies.length} 封新回信</strong> : <small>去写信</small>}
+      </button>
 
       <div className="relative z-10 flex-1 space-y-4 overflow-y-auto px-2 pb-5 pl-10 pr-2 sm:pl-14">
         {chat.messages.map((message, index) => {
@@ -266,7 +279,7 @@ function ChatPanel({ chat, focusMessageId, isEntering, onFocusHandled }) {
   )
 }
 
-function MoodPanel({ chat }) {
+function MoodPanel({ account, chat, mailbox }) {
   const [isReacting, setIsReacting] = useState(false)
 
   useEffect(() => {
@@ -277,6 +290,10 @@ function MoodPanel({ chat }) {
     const timerId = window.setTimeout(() => setIsReacting(false), 1000)
     return () => window.clearTimeout(timerId)
   }, [isReacting])
+
+  if (account && mailbox) {
+    return <MailboxPanel account={account} mailbox={mailbox} />
+  }
 
   const chooseRandomMood = () => {
     const availableMoods = moodFaces.filter((mood) => mood.id !== chat.agentState)
@@ -560,9 +577,13 @@ function ActionsPanel({ chat, onRunAction }) {
   )
 }
 
-function LocalPanel({ chat, clearNotice, onRequestClear }) {
+function LocalPanel({ account, chat, clearNotice, mailbox, onRequestClear }) {
   const importInputRef = useRef(null)
   const [status, setStatus] = useState('')
+
+  if (account && mailbox) {
+    return <AccountPanel account={account} chat={chat} mailbox={mailbox} onRequestLocalClear={onRequestClear} />
+  }
 
   const exportData = () => {
     const blob = new Blob([chat.exportLocalData()], { type: 'application/json' })
@@ -674,7 +695,7 @@ function ConfirmDialog({ confirmLabel, description, onCancel, onConfirm, title }
   )
 }
 
-function SidePreview({ chat, isEntering, onViewChange }) {
+function SidePreview({ chat, isEntering, mailbox, onViewChange }) {
   const memoryPreview = useMemo(() => chat.messages.slice(-2).reverse(), [chat.messages])
 
   return (
@@ -684,18 +705,27 @@ function SidePreview({ chat, isEntering, onViewChange }) {
       initial={isEntering ? { opacity: 0, x: 26, y: 12 } : false}
       transition={{ delay: isEntering ? 0.32 : 0, duration: 0.36, ease: 'easeOut' }}
     >
-      <BentoCard className="cloud-card min-h-[250px]" icon={Smile} title="情绪">
+      <BentoCard className="cloud-card min-h-[250px]" icon={Mail} title="情绪信箱">
         <div className="flex flex-col items-center text-center">
-          <LinoMascot pose={chat.agentState} size="lg" state={chat.agentState} />
+          <LinoMascot
+            activity={mailbox.unreadReplies.length ? 'feedback' : 'receiving'}
+            pose={chat.agentState}
+            size="lg"
+            state={mailbox.unreadReplies.length ? 'proud' : chat.agentState}
+          />
           <p className="mt-1 text-base font-semibold text-neutral-950">
-            当前情绪：{moodFaces.find((mood) => mood.id === chat.agentState)?.label ?? '平静'}
+            {mailbox.unreadReplies.length
+              ? `${mailbox.unreadReplies.length} 封新回信`
+              : mailbox.todayMood
+                ? `今天：${moodOptions.find((mood) => mood.id === mailbox.todayMood.moodId)?.label}`
+                : '今天还没有写信'}
           </p>
           <button
             className="mt-4 text-sm font-semibold text-neutral-950 underline decoration-2 underline-offset-4"
             onClick={() => onViewChange('mood')}
             type="button"
           >
-            查看情绪
+            打开情绪信箱
           </button>
         </div>
       </BentoCard>
@@ -766,10 +796,11 @@ function SidePreview({ chat, isEntering, onViewChange }) {
   )
 }
 
-export function ChatStage({ chat, isEntering = false }) {
+export function ChatStage({ account, chat, isEntering = false, mailbox }) {
   const [activeView, setActiveView] = useState('chat')
   const [focusedMessageId, setFocusedMessageId] = useState(null)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false)
   const [confirmation, setConfirmation] = useState(null)
   const [localClearNotice, setLocalClearNotice] = useState('')
   const menuRef = useRef(null)
@@ -778,6 +809,7 @@ export function ChatStage({ chat, isEntering = false }) {
     setActiveView(view)
     setFocusedMessageId(view === 'chat' ? messageId : null)
     setIsMenuOpen(false)
+    setIsMobileDrawerOpen(false)
   }, [])
 
   const runAction = useCallback(
@@ -807,6 +839,7 @@ export function ChatStage({ chat, isEntering = false }) {
       resetDesk()
     } else if (confirmation === 'local-clear') {
       chat.clearLocalData()
+      mailbox.clearMailbox()
       setLocalClearNotice('本地数据已清除。')
     }
     setConfirmation(null)
@@ -863,6 +896,14 @@ export function ChatStage({ chat, isEntering = false }) {
       transition={{ duration: isEntering ? 0.46 : 0.36, ease: 'easeOut' }}
     >
       <div className="doodle-page-frame relative flex min-h-[calc(100svh-2.5rem)] flex-col overflow-hidden rounded-[2.25rem] bg-white/[0.84] px-5 py-5 sm:px-8 sm:py-7">
+        <MobileDrawer
+          activeView={activeView}
+          isOpen={isMobileDrawerOpen}
+          onChange={openDeskView}
+          onClose={() => setIsMobileDrawerOpen(false)}
+          onOpen={() => setIsMobileDrawerOpen(true)}
+          unreadCount={mailbox.unreadReplies.length}
+        />
         <header className="relative z-20 mb-5 flex flex-col gap-4">
           <div className="relative flex items-center justify-between">
             <div className="flex min-w-0 items-center gap-3">
@@ -947,18 +988,20 @@ export function ChatStage({ chat, isEntering = false }) {
                 chat={chat}
                 focusMessageId={focusedMessageId}
                 isEntering={isEntering}
+                mailbox={mailbox}
                 onFocusHandled={clearFocusedMessage}
+                onOpenMailbox={() => openDeskView('mood')}
               />
-              <SidePreview chat={chat} isEntering={isEntering} onViewChange={openDeskView} />
+              <SidePreview chat={chat} isEntering={isEntering} mailbox={mailbox} onViewChange={openDeskView} />
             </MotionPanel>
           ) : activeView === 'mood' ? (
-            <MoodPanel chat={chat} key="mood" />
+            <MoodPanel account={account} chat={chat} key="mood" mailbox={mailbox} />
           ) : activeView === 'memory' ? (
             <MemoryPanel chat={chat} key="memory" onOpenMessage={(messageId) => openDeskView('chat', messageId)} />
           ) : activeView === 'actions' ? (
             <ActionsPanel chat={chat} key="actions" onRunAction={runAction} />
           ) : (
-            <LocalPanel chat={chat} clearNotice={localClearNotice} key="local" onRequestClear={requestLocalClear} />
+            <LocalPanel account={account} chat={chat} clearNotice={localClearNotice} key="local" mailbox={mailbox} onRequestClear={requestLocalClear} />
           )}
         </AnimatePresence>
       </div>

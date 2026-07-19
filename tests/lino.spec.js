@@ -1,17 +1,5 @@
 import { expect, test } from '@playwright/test'
 
-const moodStates = [
-  { id: 'idle', row: '0', column: '0' },
-  { id: 'happy', row: '0', column: '1' },
-  { id: 'playful', row: '0', column: '2' },
-  { id: 'curious', row: '1', column: '0' },
-  { id: 'shy', row: '1', column: '1' },
-  { id: 'surprised', row: '1', column: '2' },
-  { id: 'thinking', row: '2', column: '0' },
-  { id: 'proud', row: '2', column: '1' },
-  { id: 'sleepy', row: '2', column: '2' },
-]
-
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
   await page.evaluate(() => window.localStorage.clear())
@@ -21,6 +9,13 @@ test.beforeEach(async ({ page }) => {
       status: 503,
       contentType: 'application/json',
       body: JSON.stringify({ error: 'provider_unavailable' }),
+    }),
+  )
+  await page.route('**/api/auth/session', (route) =>
+    route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'not_authenticated' }),
     }),
   )
 })
@@ -47,7 +42,7 @@ test('entry state expands into the Lino comic desk', async ({ page }) => {
     'page',
   )
   await expect(page.getByRole('heading', { name: '对话' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: '情绪' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '情绪信箱' })).toBeVisible()
   await expect(page.getByRole('heading', { name: '记忆' })).toBeVisible()
   await expect(page.locator('article')).toHaveCount(3)
 })
@@ -130,42 +125,18 @@ test('memory records can be added, removed, and cleared without deleting the con
   await expect(page.locator('.conversation-panel').getByText(prompt)).toBeVisible()
 })
 
-test('local data can be exported and cleared from the local page', async ({ page }) => {
+test('local data can be exported and cleared from the account page', async ({ page }) => {
   await page.getByRole('button', { name: '发送消息' }).click()
-  await page.getByRole('button', { name: '打开本地界面' }).click()
+  await page.getByRole('button', { name: '打开账户界面' }).click()
 
   const download = page.waitForEvent('download')
-  await page.getByRole('button', { name: '导出本地数据' }).click()
+  await page.getByRole('button', { name: '导出全部数据' }).click()
   await expect(await download).toBeTruthy()
 
-  await page.locator('input[type="file"]').setInputFiles({
-    name: 'lino-import.json',
-    mimeType: 'application/json',
-    buffer: Buffer.from(
-      JSON.stringify({
-        version: 4,
-        agentState: 'idle',
-        messages: [
-          {
-            id: 'assistant-imported',
-            role: 'assistant',
-            content: '已导入的本地对话。',
-            createdAt: new Date().toISOString(),
-          },
-        ],
-        favoriteMessageIds: [],
-        hiddenMemoryMessageIds: [],
-        manualMemories: [],
-        memories: [],
-      }),
-    ),
-  })
-  await expect(page.getByText('本地数据已导入。')).toBeVisible()
-
-  await page.getByRole('button', { name: '清除本地数据' }).click()
+  await page.getByRole('button', { name: '清除本机数据' }).click()
   await expect(page.getByRole('dialog', { name: '清除本地数据' })).toBeVisible()
   await page.getByRole('button', { name: '确认清除本地数据' }).click()
-  await expect(page.getByText('本地数据已清除。')).toBeVisible()
+  await expect(page.getByRole('dialog', { name: '清除本地数据' })).toBeHidden()
 })
 
 test('one user and Lino reply share a single conversation action row', async ({ page }) => {
@@ -190,12 +161,12 @@ test('one user and Lino reply share a single conversation action row', async ({ 
   await expect(userMessage.getByLabel('编辑消息内容')).toBeVisible()
   await userMessage.getByLabel('编辑消息内容').fill(editedPrompt)
   await page.getByRole('button', { name: '保存修改' }).click()
-  await expect(page.getByText('Lino 正在思考')).toBeVisible()
   await expect(editedUserMessage).toContainText(editedPrompt)
+  await expect(page.locator('article[data-response-source="local-mock"]')).toBeVisible()
   await expect(page.getByLabel('重试 Lino 回答')).toBeVisible()
 
   await page.getByLabel('重试 Lino 回答').click()
-  await expect(page.getByText('Lino 正在思考')).toBeVisible()
+  await expect(page.locator('article[data-response-source="local-mock"]')).toBeVisible()
   await expect(page.getByLabel('重试 Lino 回答')).toBeVisible()
 })
 
@@ -231,29 +202,26 @@ test('action cards send users back to the linked conversation without cue pills'
   await expect(page.locator('.message-focus')).toContainText('我想把一个任务整理清楚')
 })
 
-test('mobile desk navigation keeps all five views within the visible lane', async ({ page }) => {
+test('mobile uses an edge drawer instead of shrinking the desktop navigation', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.getByRole('button', { name: '发送消息' }).click()
 
-  const navigation = page.getByRole('navigation', { name: 'Lino 工作台视图' })
-  await expect(navigation).toBeVisible()
-  await expect(navigation.getByRole('button')).toHaveCount(5)
-
-  const metrics = await navigation.evaluate((element) => ({
-    clientWidth: element.clientWidth,
-    scrollWidth: element.scrollWidth,
-  }))
-  expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth)
+  await expect(page.getByRole('navigation', { name: 'Lino 工作台视图' })).toBeHidden()
+  await page.getByRole('button', { name: '打开移动导航' }).click()
+  const drawer = page.getByRole('dialog', { name: 'Lino 移动导航' })
+  await expect(drawer).toBeVisible()
+  await expect(drawer.getByRole('button')).toHaveCount(6)
+  await drawer.getByRole('button', { name: /情绪信箱/ }).click()
+  await expect(page.getByRole('heading', { name: '情绪信箱' })).toBeVisible()
 })
 
 test('comic desk switches between distinct Lino views', async ({ page }) => {
   await page.getByRole('button', { name: '发送消息' }).click()
   await expect(page.getByRole('heading', { name: '对话' })).toBeVisible()
 
-  await page.getByRole('button', { name: '打开情绪界面' }).click()
-  await expect(page.getByRole('heading', { name: '情绪画板' })).toBeVisible()
-  await page.getByRole('button', { name: /高兴/ }).click()
-  await expect(page.getByRole('img', { name: /Lino happy front happy/ }).first()).toBeVisible()
+  await page.getByRole('button', { name: '打开信箱界面' }).click()
+  await expect(page.getByRole('heading', { name: '情绪信箱' })).toBeVisible()
+  await expect(page.getByRole('tab', { name: '写今天的信' })).toHaveAttribute('aria-selected', 'true')
 
   await page.getByRole('button', { name: '打开记忆界面' }).click()
   await expect(page.getByRole('heading', { name: '记忆剪贴簿' })).toBeVisible()
@@ -261,11 +229,11 @@ test('comic desk switches between distinct Lino views', async ({ page }) => {
   await page.getByRole('button', { name: '打开行动界面' }).click()
   await expect(page.getByRole('heading', { name: '行动面板' })).toBeVisible()
 
-  await page.getByRole('button', { name: '打开本地界面' }).click()
-  await expect(page.getByRole('heading', { name: '本地空间' })).toBeVisible()
+  await page.getByRole('button', { name: '打开账户界面' }).click()
+  await expect(page.getByRole('heading', { name: '账户与隐私' })).toBeVisible()
 })
 
-test('Lino exposes a distinct activity for chat, memory, actions, and local data feedback', async ({
+test('Lino exposes a distinct activity for chat, memory, actions, and account feedback', async ({
   page,
 }) => {
   await page.getByRole('button', { name: '发送消息' }).click()
@@ -285,29 +253,12 @@ test('Lino exposes a distinct activity for chat, memory, actions, and local data
     'execute-ready',
   )
 
-  await page.getByRole('button', { name: '打开本地界面' }).click()
-  const localLino = page.locator('.ticket-card [role="img"]')
-  await expect(localLino).toHaveAttribute('data-activity', 'guarding')
+  await page.getByRole('button', { name: '打开账户界面' }).click()
+  const accountLino = page.locator('.account-intro [role="img"]')
+  await expect(accountLino).toHaveAttribute('data-activity', 'guarding')
   const download = page.waitForEvent('download')
-  await page.getByRole('button', { name: '导出本地数据' }).click()
+  await page.getByRole('button', { name: '导出全部数据' }).click()
   await download
-  await expect(localLino).toHaveAttribute('data-activity', 'saving')
-})
-
-test('chat and Mood Lino acknowledge thinking, completion, and a mood reaction', async ({ page }) => {
-  await page.getByRole('button', { name: '发送消息' }).click()
-  const headerLino = page.locator('.lino-header-orbit [role="img"]')
-  await page.locator('.conversation-panel input[name="message"]:not([disabled])').fill('请进入思考状态。')
-  await page.locator('.conversation-panel button[type="submit"]:not([disabled])').click()
-  await expect(headerLino).toHaveAttribute('data-activity', 'thinking')
-  await expect(page.getByLabel('重试 Lino 回答')).toBeVisible()
-  await expect(headerLino).toHaveAttribute('data-activity', 'complete')
-
-  await page.getByRole('button', { name: '打开情绪界面' }).click()
-  const moodLino = page.getByRole('button', { name: '随机切换 Lino 情绪' }).getByRole('img')
-  await expect(moodLino).toHaveAttribute('data-activity', 'mood')
-  await page.getByRole('button', { name: '随机切换 Lino 情绪' }).click()
-  await expect(moodLino).toHaveAttribute('data-activity', 'reacting')
 })
 
 test('DeepSeek request falls back to the local simulator when the server is unavailable', async ({ page }) => {
@@ -342,35 +293,6 @@ test('an in-flight DeepSeek response can be stopped without leaving a blank repl
   await expect(page.locator('.conversation-panel input[name="message"]:not([disabled])')).toBeVisible()
 })
 
-test('mood stage centers Lino together with its status copy', async ({ page }) => {
-  await page.getByRole('button', { name: '发送消息' }).click()
-  await page.getByRole('button', { name: '打开情绪界面' }).click()
-
-  const panel = page.locator('.mood-feature-panel')
-  const lino = page.getByRole('button', { name: '随机切换 Lino 情绪' })
-  const description = page.getByText('选择一个分镜情绪，Lino 会用动作回应。')
-  const [panelBox, linoBox, descriptionBox] = await Promise.all([
-    panel.boundingBox(),
-    lino.boundingBox(),
-    description.boundingBox(),
-  ])
-
-  expect(panelBox).not.toBeNull()
-  expect(linoBox).not.toBeNull()
-  expect(descriptionBox).not.toBeNull()
-  expect(Math.abs(linoBox.y + linoBox.height / 2 - (panelBox.y + panelBox.height / 2))).toBeLessThan(70)
-  expect(descriptionBox.y).toBeGreaterThan(linoBox.y + linoBox.height)
-})
-
-test('mood stage keeps Lino visible in the first desktop viewport', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 920 })
-  await page.getByRole('button', { name: '发送消息' }).click()
-  await page.getByRole('button', { name: '打开情绪界面' }).click()
-
-  const linoBox = await page.getByRole('button', { name: '随机切换 Lino 情绪' }).boundingBox()
-  expect(linoBox).not.toBeNull()
-  expect(linoBox.y + linoBox.height).toBeLessThanOrEqual(920)
-})
 
 test('header menu actions work and tab hover stays inside the visible navigation lane', async ({
   page,
@@ -401,77 +323,6 @@ test('header menu actions work and tab hover stays inside the visible navigation
   await expect(page.getByRole('menu')).toBeHidden()
 })
 
-test('Mood exposes all nine reference states and sprite coordinates', async ({ page }) => {
-  await page.getByRole('button', { name: '发送消息' }).click()
-  await page.getByRole('button', { name: '打开情绪界面' }).click()
-
-  const moodButtons = page.locator('.expression-strip')
-  const mainLino = page.getByRole('button', { name: '随机切换 Lino 情绪' })
-  const mainMascot = mainLino.getByRole('img')
-
-  await expect(moodButtons).toHaveCount(9)
-  await expect(mainMascot).toHaveAttribute('data-sprite-background', 'transparent')
-  await expect(mainMascot.locator('img')).toHaveAttribute(
-    'src',
-    '/lino-assets/lino-nine-states-transparent.png',
-  )
-
-  for (const [index, state] of moodStates.entries()) {
-    await moodButtons.nth(index).click()
-    await expect(mainMascot).toHaveAttribute('data-state', state.id)
-    await expect(mainMascot).toHaveAttribute('data-expression', state.id)
-    await expect(mainMascot).toHaveAttribute('data-sprite-row', state.row)
-    await expect(mainMascot).toHaveAttribute('data-sprite-column', state.column)
-    await expect(moodButtons.nth(index)).toHaveAttribute('aria-pressed', 'true')
-  }
-})
-
-test('legacy sad and angry states migrate to the approved sprite states', async ({
-  page,
-}) => {
-  const restoreState = async (state) => {
-    await page.evaluate((agentState) => {
-      window.localStorage.setItem(
-        'lino-home:v2',
-        JSON.stringify({
-          version: 2,
-          agentState,
-          memories: [],
-          messages: [],
-        }),
-      )
-    }, state)
-    await page.reload({ waitUntil: 'networkidle' })
-    await page.getByRole('button', { name: '发送消息' }).click()
-    await page.getByRole('button', { name: '打开情绪界面' }).click()
-  }
-
-  await restoreState('sad')
-  await expect(
-    page.getByRole('button', { name: '随机切换 Lino 情绪' }).getByRole('img'),
-  ).toHaveAttribute('data-state', 'shy')
-
-  await page.goto('/')
-  await restoreState('angry')
-  await expect(
-    page.getByRole('button', { name: '随机切换 Lino 情绪' }).getByRole('img'),
-  ).toHaveAttribute('data-state', 'proud')
-})
-
-test('clicking the main Mood Lino triggers a different random expression', async ({
-  page,
-}) => {
-  await page.getByRole('button', { name: '发送消息' }).click()
-  await page.getByRole('button', { name: '打开情绪界面' }).click()
-
-  const mainLinoButton = page.getByRole('button', { name: '随机切换 Lino 情绪' })
-  const mainLino = mainLinoButton.getByRole('img')
-  const previousState = await mainLino.getAttribute('data-state')
-
-  await mainLinoButton.click()
-
-  await expect(mainLino).not.toHaveAttribute('data-state', previousState)
-})
 
 test('suggestions, thinking state, and v4 localStorage work', async ({ page }) => {
   await page.getByRole('button', { name: '发送消息' }).click()

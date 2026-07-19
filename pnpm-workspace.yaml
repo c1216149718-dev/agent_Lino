@@ -2,3 +2,6 @@ allowBuilds:
   esbuild: true
   sharp: true
   workerd: true
+minimumReleaseAgeExclude:
+  - '@fontsource/lxgw-wenkai@5.3.0'
+  - '@fontsource/zen-maru-gothic@5.3.0'
