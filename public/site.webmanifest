@@ -1,17 +1,13 @@
 {
-  "name": "Lino 对话空间",
-  "short_name": "Lino",
-  "description": "一个温和、可靠、本地优先的 AI 对话智能体网站原型。",
+  "name": "云栖境 Lumora",
+  "short_name": "Lumora",
+  "description": "五位精灵陪伴你的 AI 对话、情绪记录与生活整理空间。",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FFFFFF",
-  "theme_color": "#FFFFFF",
+  "background_color": "#FFFDF8",
+  "theme_color": "#FFFDF8",
   "icons": [
-    {
-      "src": "/favicon.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
+    { "src": "/lumora-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/lumora-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }

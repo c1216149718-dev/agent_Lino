@@ -20,10 +20,10 @@ export function useCloudAccount({ chat, mailbox }) {
     () => ({
       letters: mailbox.letters.length,
       memories: chat.manualMemories.length + chat.memories.length,
-      messages: chat.messages.length,
+      messages: chat.conversations.reduce((total, conversation) => total + conversation.messages.length, 0),
       moods: mailbox.moods.length,
     }),
-    [chat.manualMemories.length, chat.memories.length, chat.messages.length, mailbox.letters.length, mailbox.moods.length],
+    [chat.conversations, chat.manualMemories.length, chat.memories.length, mailbox.letters.length, mailbox.moods.length],
   )
 
   const hydrate = useCallback((payload) => {
