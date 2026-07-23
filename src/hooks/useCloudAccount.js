@@ -1,9 +1,33 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { cloudService } from '../services/cloudService'
 
+const profileStorageKey = 'lumora-profile:v1'
+const defaultLocalProfile = { avatarDataUrl: null, displayName: '云栖者' }
+const defaultAvatarUrl = '/lumora-assets/brand/lumora-mark.png'
+
+function readLocalProfile() {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(profileStorageKey))
+    return normalizeProfile(stored)
+  } catch {
+    return defaultLocalProfile
+  }
+}
+
+function normalizeProfile(value = {}) {
+  const avatarDataUrl = typeof value.avatarDataUrl === 'string' && /^data:image\/(?:png|jpeg|webp);base64,[a-z0-9+/=]+$/i.test(value.avatarDataUrl) && value.avatarDataUrl.length <= 350_000
+    ? value.avatarDataUrl
+    : null
+  return {
+    avatarDataUrl,
+    displayName: String(value.displayName || defaultLocalProfile.displayName).trim().slice(0, 20) || defaultLocalProfile.displayName,
+  }
+}
+
 export function useCloudAccount({ chat, mailbox }) {
   const [status, setStatus] = useState('checking')
   const [profile, setProfile] = useState(null)
+  const [localProfile, setLocalProfile] = useState(readLocalProfile)
   const [recoveryCard, setRecoveryCard] = useState(null)
   const [syncStatus, setSyncStatus] = useState('local')
   const [needsImport, setNeedsImport] = useState(false)
@@ -11,6 +35,13 @@ export function useCloudAccount({ chat, mailbox }) {
   const hydratedRef = useRef(false)
   const latestRef = useRef({ chat, mailbox })
   const pendingCloudRef = useRef(null)
+
+  const saveLocalProfile = useCallback((nextProfile) => {
+    const normalized = normalizeProfile(nextProfile)
+    window.localStorage.setItem(profileStorageKey, JSON.stringify(normalized))
+    setLocalProfile(normalized)
+    return normalized
+  }, [])
 
   useEffect(() => {
     latestRef.current = { chat, mailbox }
@@ -47,6 +78,7 @@ export function useCloudAccount({ chat, mailbox }) {
       .then(async ({ user }) => {
         if (!active || !user) return
         setProfile(user)
+        saveLocalProfile(user)
         setStatus('connected')
         setSyncStatus('syncing')
         hydrate(await cloudService.pull())
@@ -60,30 +92,53 @@ export function useCloudAccount({ chat, mailbox }) {
     return () => {
       active = false
     }
-  }, [hydrate])
+  }, [hydrate, saveLocalProfile])
 
   const createAccount = useCallback(async () => {
     setSyncStatus('syncing')
-    const result = await cloudService.createAccount()
-    setProfile(result.user)
-    setRecoveryCard({ linoId: result.user.linoId, recoveryCode: result.recoveryCode })
+    const created = await cloudService.createAccount()
+    const profileResult = await cloudService.updateProfile(localProfile).catch(() => created)
+    const user = profileResult.user || created.user
+    const result = { ...created, user }
+    setProfile(user)
+    saveLocalProfile(user)
+    setRecoveryCard({ cloudId: created.user.cloudId || created.user.linoId, recoveryCode: created.recoveryCode })
     setStatus('connected')
     setNeedsImport(true)
     setSyncStatus('waiting')
     return result
-  }, [])
+  }, [localProfile, saveLocalProfile])
 
   const restoreAccount = useCallback(async (credentials) => {
     setSyncStatus('syncing')
     const result = await cloudService.restoreAccount(credentials)
     setProfile(result.user)
+    saveLocalProfile(result.user)
     setStatus('connected')
     pendingCloudRef.current = await cloudService.pull()
     setNeedsImport(true)
     setSyncEnabled(false)
     setSyncStatus('waiting')
     return result
-  }, [])
+  }, [saveLocalProfile])
+
+  const updateProfile = useCallback(async (nextProfile) => {
+    const normalized = normalizeProfile(nextProfile)
+    if (status === 'connected') {
+      const result = await cloudService.updateProfile(normalized)
+      setProfile(result.user)
+      saveLocalProfile(result.user)
+      return result.user
+    }
+    saveLocalProfile(normalized)
+    return normalized
+  }, [saveLocalProfile, status])
+
+  const importLocalProfile = useCallback((nextProfile) => {
+    if (!nextProfile || typeof nextProfile !== 'object') return false
+    saveLocalProfile(nextProfile)
+    return true
+  }, [saveLocalProfile])
 
   const snapshot = useCallback(() => ({
     chat: JSON.parse(latestRef.current.chat.exportLocalData()),
@@ -156,6 +211,8 @@ export function useCloudAccount({ chat, mailbox }) {
     setStatus('guest')
     setSyncEnabled(false)
     setSyncStatus('local')
+    window.localStorage.removeItem(profileStorageKey)
+    setLocalProfile(defaultLocalProfile)
   }, [])
 
   const markReplyRead = useCallback(async (replyId) => {
@@ -169,6 +226,13 @@ export function useCloudAccount({ chat, mailbox }) {
     closeRecoveryCard: () => setRecoveryCard(null),
     createAccount,
     deleteAccount,
+    identity: {
+      avatarUrl: (profile?.avatarDataUrl || localProfile.avatarDataUrl) ?? defaultAvatarUrl,
+      cloudId: profile?.cloudId || profile?.linoId || null,
+      displayName: profile?.displayName || localProfile.displayName,
+    },
+    importLocalProfile,
+    localProfile,
     localSummary,
     logout,
     markReplyRead,
@@ -179,6 +243,7 @@ export function useCloudAccount({ chat, mailbox }) {
     status,
     syncNow,
     syncStatus,
+    updateProfile,
     useCloudData,
   }
 }

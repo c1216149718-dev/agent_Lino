@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Archive, ChevronRight, Menu, MessageCirclePlus, Settings, Trash2, X } from 'lucide-react'
+import { Archive, ChevronRight, Cloud, Menu, MessageCirclePlus, Trash2, X } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { SPIRIT_IDS, getSpirit, navItems } from '../data/lumora'
 import { AccountView } from './AccountView'
@@ -25,6 +25,10 @@ function ConversationLibrary({ chat, onDelete, onNew, onOpen }) {
 
 function Brand() {
   return <div className="lumora-brand"><img alt="" src="/lumora-assets/brand/lumora-mark.png" /><div><strong>云栖境</strong><span>Lumora</span></div></div>
+}
+
+function UserAvatar({ account }) {
+  return <img alt="" src={account.identity.avatarUrl} />
 }
 
 export function LumoraShell({ account, chat, mailbox }) {
@@ -74,10 +78,10 @@ export function LumoraShell({ account, chat, mailbox }) {
         <button className="mobile-menu-button" aria-label="打开导航" onClick={() => setDrawerOpen(true)} type="button"><Menu size={23} /></button>
         <button className="brand-button" onClick={() => navigate('chat')} type="button"><Brand /></button>
         <nav aria-label="主导航">{navItems.map((item) => <button className={page === item.id ? 'is-active' : ''} key={item.id} onClick={() => navigate(item.id)} type="button">{item.label}{item.id === 'record' && mailbox.unreadReplies.length > 0 && <span className="nav-badge">{mailbox.unreadReplies.length}</span>}</button>)}</nav>
-        <div className="header-tools"><button className="current-spirit-button" onClick={() => navigate('spirits')} type="button"><SpiritAsset avatar spiritId={selectedSpirit.id} /><span>{selectedSpirit.name}</span></button><button aria-label="账户与隐私" className="icon-button" onClick={() => navigate('account')} title="账户与隐私" type="button"><Settings size={18} /></button></div>
+        <div className="header-tools"><button className="current-spirit-button" onClick={() => navigate('spirits')} type="button"><SpiritAsset avatar spiritId={selectedSpirit.id} /><span>{selectedSpirit.name}</span></button><button aria-label={`个人账户：${account.identity.displayName}`} className={`profile-button ${page === 'account' ? 'is-active' : ''}`} onClick={() => navigate('account')} title="个人账户" type="button"><UserAvatar account={account} /><span>{account.identity.displayName}</span></button></div>
       </header>
 
-      <AnimatePresence>{drawerOpen && <motion.div className="mobile-drawer-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setDrawerOpen(false)}><motion.aside className="mobile-drawer" initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} onClick={(event) => event.stopPropagation()}><div className="drawer-heading"><Brand /><button className="icon-button" onClick={() => setDrawerOpen(false)} type="button"><X size={19} /></button></div><div className="drawer-spirit"><SpiritAsset spiritId={selectedSpirit.id} /><strong>{selectedSpirit.name}</strong><span>{selectedSpirit.realm}</span></div>{navItems.map((item) => <button className={page === item.id ? 'is-active' : ''} key={item.id} onClick={() => navigate(item.id)} type="button">{item.label}{item.id === 'record' && mailbox.unreadReplies.length > 0 && <span>{mailbox.unreadReplies.length}</span>}</button>)}<button onClick={() => navigate('account')} type="button">账户与隐私</button></motion.aside></motion.div>}</AnimatePresence>
+      <AnimatePresence>{drawerOpen && <motion.div className="mobile-drawer-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setDrawerOpen(false)}><motion.aside className="mobile-drawer" initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} onClick={(event) => event.stopPropagation()}><div className="drawer-heading"><Brand /><button aria-label="关闭导航" className="icon-button" onClick={() => setDrawerOpen(false)} type="button"><X size={19} /></button></div><button aria-label="个人账户" className="drawer-profile" onClick={() => navigate('account')} type="button"><UserAvatar account={account} /><span><strong>{account.identity.displayName}</strong><small>{account.identity.cloudId ? '云栖 ID 已连接' : '资料保存在本机'}</small></span><Cloud size={17} /></button><div className="drawer-spirit"><SpiritAsset spiritId={selectedSpirit.id} /><strong>{selectedSpirit.name}</strong><span>{selectedSpirit.realm}</span></div>{navItems.map((item) => <button className={page === item.id ? 'is-active' : ''} key={item.id} onClick={() => navigate(item.id)} type="button">{item.label}{item.id === 'record' && mailbox.unreadReplies.length > 0 && <span>{mailbox.unreadReplies.length}</span>}</button>)}</motion.aside></motion.div>}</AnimatePresence>
 
       <main className={`app-main page-${page}`} id="main-content">
         {page === 'chat' && <div className="chat-shell"><ConversationSidebar activeId={chat.activeConversationId} conversations={chat.conversationsBySpirit[selectedSpirit.id] ?? []} isResponding={chat.isResponding} onDelete={setDeleteTarget} onNew={() => newConversation()} onOpen={openConversation} spiritId={selectedSpirit.id} /><div className="chat-main-panel">{libraryOnly ? <ConversationLibrary chat={chat} onDelete={setDeleteTarget} onNew={() => newConversation()} onOpen={openConversation} /> : <ChatView chat={chat} onDelete={setDeleteTarget} onShowHistory={() => setLibraryOnly(true)} />}</div></div>}

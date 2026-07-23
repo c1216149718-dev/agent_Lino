@@ -105,3 +105,47 @@ test('chat selects the requested spirit and receives summary-level shared memory
     globalThis.fetch = originalFetch
   }
 })
+
+test('profile endpoint updates the cloud identity for an authenticated user', async () => {
+  const state = {
+    user: {
+      authType: 'recovery_card',
+      avatarDataUrl: null,
+      cloudId: 'LUMO-TEST-USER',
+      createdAt: '2026-07-23T00:00:00.000Z',
+      displayName: '云栖者',
+      id: 'user-profile-test',
+      linoId: 'LUMO-TEST-USER',
+    },
+  }
+  const database = {
+    prepare(sql) {
+      return {
+        args: [],
+        bind(...args) { this.args = args; return this },
+        async first() {
+          if (sql.includes('FROM sessions JOIN users')) return { ...state.user }
+          return null
+        },
+        async run() {
+          if (sql.includes('INSERT INTO user_settings')) {
+            state.user.displayName = this.args[1]
+            state.user.avatarDataUrl = this.args[2]
+          }
+          return { success: true }
+        },
+      }
+    },
+  }
+
+  const response = await worker.fetch(new Request('https://example.com/api/auth/profile', {
+    method: 'PATCH',
+    headers: { Cookie: 'lino_session=test-session', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ displayName: '小云', avatarDataUrl: 'data:image/png;base64,aGVsbG8=' }),
+  }), { DB: database })
+  const payload = await response.json()
+
+  expect(response.status).toBe(200)
+  expect(payload.user).toMatchObject({ cloudId: 'LUMO-TEST-USER', displayName: '小云' })
+  expect(payload.user.avatarDataUrl).toContain('data:image/png;base64,')
+})

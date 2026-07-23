@@ -64,8 +64,15 @@ async function getUser(request, env) {
   if (!token) return null
   const tokenHash = await sha256(token)
   return env.DB.prepare(`
-    SELECT users.id, users.lino_id AS linoId, users.auth_type AS authType, users.created_at AS createdAt
+    SELECT users.id,
+      users.lino_id AS cloudId,
+      users.lino_id AS linoId,
+      users.auth_type AS authType,
+      users.created_at AS createdAt,
+      COALESCE(user_settings.display_name, '云栖者') AS displayName,
+      user_settings.avatar_data_url AS avatarDataUrl
     FROM sessions JOIN users ON users.id = sessions.user_id
+    LEFT JOIN user_settings ON user_settings.user_id = users.id
     WHERE sessions.token_hash = ?1 AND sessions.expires_at > ?2
   `).bind(tokenHash, new Date().toISOString()).first()
 }
@@ -151,22 +158,51 @@ async function authRoutes(request, env, url) {
     await env.DB.batch([
       env.DB.prepare('INSERT INTO users (id, lino_id, recovery_hash, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?4)').bind(id, linoId, recoveryHash, now),
       env.DB.prepare("INSERT INTO user_snapshots (user_id, chat_json, revision, updated_at) VALUES (?1, '{}', 1, ?2)").bind(id, now),
-      env.DB.prepare("INSERT INTO user_settings (user_id, timezone, updated_at) VALUES (?1, 'Asia/Shanghai', ?2)").bind(id, now),
+      env.DB.prepare("INSERT INTO user_settings (user_id, timezone, display_name, updated_at) VALUES (?1, 'Asia/Shanghai', '云栖者', ?2)").bind(id, now),
     ])
     const token = await createSession(env, id)
-    return jsonResponse(201, { recoveryCode, user: { id, linoId, authType: 'recovery_card', createdAt: now } }, { 'Set-Cookie': sessionHeader(token, undefined, secureCookie) })
+    return jsonResponse(201, { recoveryCode, user: { id, cloudId: linoId, linoId, displayName: '云栖者', avatarDataUrl: null, authType: 'recovery_card', createdAt: now } }, { 'Set-Cookie': sessionHeader(token, undefined, secureCookie) })
   }
 
   if (url.pathname === '/api/auth/restore' && request.method === 'POST') {
     const body = await request.json().catch(() => ({}))
-    const linoId = String(body.linoId || '').trim().toUpperCase()
+    const linoId = String(body.cloudId || body.linoId || '').trim().toUpperCase()
     const recoveryCode = String(body.recoveryCode || '').trim().toUpperCase()
-    const user = await env.DB.prepare('SELECT id, lino_id AS linoId, auth_type AS authType, created_at AS createdAt, recovery_hash AS recoveryHash FROM users WHERE lino_id = ?1')
+    const user = await env.DB.prepare(`SELECT users.id,
+      users.lino_id AS cloudId,
+      users.lino_id AS linoId,
+      users.auth_type AS authType,
+      users.created_at AS createdAt,
+      users.recovery_hash AS recoveryHash,
+      COALESCE(user_settings.display_name, '云栖者') AS displayName,
+      user_settings.avatar_data_url AS avatarDataUrl
+      FROM users LEFT JOIN user_settings ON user_settings.user_id = users.id
+      WHERE users.lino_id = ?1`)
       .bind(linoId).first()
     if (!user || user.recoveryHash !== await sha256(recoveryCode)) return jsonResponse(401, { error: 'invalid_recovery_card' })
     const token = await createSession(env, user.id)
     delete user.recoveryHash
     return jsonResponse(200, { user }, { 'Set-Cookie': sessionHeader(token, undefined, secureCookie) })
+  }
+
+  if (url.pathname === '/api/auth/profile' && request.method === 'PATCH') {
+    const user = await getUser(request, env)
+    if (!user) return jsonResponse(401, { error: 'not_authenticated' })
+    const body = await request.json().catch(() => ({}))
+    const displayName = String(body.displayName || '').trim().slice(0, 20)
+    const avatarDataUrl = body.avatarDataUrl === null || body.avatarDataUrl === ''
+      ? null
+      : String(body.avatarDataUrl || '')
+    if (!displayName) return jsonResponse(400, { error: 'display_name_required' })
+    if (avatarDataUrl && (!/^data:image\/(?:png|jpeg|webp);base64,[a-z0-9+/=]+$/i.test(avatarDataUrl) || avatarDataUrl.length > 350_000)) {
+      return jsonResponse(400, { error: 'invalid_avatar' })
+    }
+    const now = new Date().toISOString()
+    await env.DB.prepare(`INSERT INTO user_settings (user_id, timezone, display_name, avatar_data_url, updated_at)
+      VALUES (?1, 'Asia/Shanghai', ?2, ?3, ?4)
+      ON CONFLICT(user_id) DO UPDATE SET display_name=excluded.display_name, avatar_data_url=excluded.avatar_data_url, updated_at=excluded.updated_at`)
+      .bind(user.id, displayName, avatarDataUrl, now).run()
+    return jsonResponse(200, { user: await getUser(request, env) })
   }
 
   if (url.pathname === '/api/auth/logout' && request.method === 'POST') {

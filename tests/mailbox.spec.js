@@ -28,7 +28,7 @@ test('六种心情会切换角色状态并写入日历', async ({ page }) => {
 test('信件保存收件精灵、信封、字体与寄送状态', async ({ page }) => {
   await page.getByRole('button', { name: '写一封信' }).click()
   await expect(page.locator('.stationery-grid img')).toHaveCount(12)
-  expect(await page.locator('.stationery-grid img').evaluateAll((images) => images.every((image) => image.complete && image.naturalWidth > 0))).toBe(true)
+  await expect.poll(() => page.locator('.stationery-grid img').evaluateAll((images) => images.every((image) => image.complete && image.naturalWidth > 0))).toBe(true)
   await page.locator('.recipient-row').getByRole('button', { name: /Nox/ }).click()
   await page.getByRole('button', { name: '星夜手札' }).click()
   await page.getByRole('button', { name: '书信仿宋' }).click()

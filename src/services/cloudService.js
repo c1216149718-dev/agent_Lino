@@ -21,7 +21,15 @@ export const cloudService = {
   session: () => request('/api/auth/session'),
   createAccount: () => request('/api/auth/create', { method: 'POST', body: '{}' }),
   restoreAccount: (credentials) =>
-    request('/api/auth/restore', { method: 'POST', body: JSON.stringify(credentials) }),
+    request('/api/auth/restore', {
+      method: 'POST',
+      body: JSON.stringify({
+        linoId: credentials.cloudId || credentials.linoId,
+        recoveryCode: credentials.recoveryCode,
+      }),
+    }),
+  updateProfile: (profile) =>
+    request('/api/auth/profile', { method: 'PATCH', body: JSON.stringify(profile) }),
   logout: () => request('/api/auth/logout', { method: 'POST', body: '{}' }),
   deleteAccount: () => request('/api/auth/account', { method: 'DELETE' }),
   pull: () => request('/api/sync'),
@@ -33,4 +41,3 @@ export const cloudService = {
       body: '{}',
     }),
 }
-
