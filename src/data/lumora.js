@@ -68,12 +68,12 @@ export const moodOptions = [
 ]
 
 export const avatarMoodMap = {
-  angry: 'sad',
-  calm: 'neutral',
-  excited: 'happy',
+  angry: 'angry',
+  calm: 'calm',
+  excited: 'excited',
   happy: 'happy',
   sad: 'sad',
-  shy: 'neutral',
+  shy: 'shy',
 }
 
 export const stationeryOptions = [
