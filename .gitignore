@@ -17,6 +17,7 @@ dist-ssr
 test-results/
 progress.md
 .wrangler/
+.openai/*.tar.gz
 
 # Editor directories and files
 .vscode/*
