@@ -30,7 +30,7 @@ export function CloudTransition({ active, onComplete, spiritId }) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: reduced ? 0.12 : 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            <SpiritAsset className="cloud-gate-spirit" spiritId={spiritId} />
+            <SpiritAsset className="cloud-gate-spirit" priority spiritId={spiritId} />
             <span>{spirit.name} 正穿过云门</span>
           </motion.div>
         </motion.div>

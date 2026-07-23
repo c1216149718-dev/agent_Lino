@@ -1,7 +1,9 @@
 import { Camera, Cloud, CloudCheck, Download, LogOut, RefreshCw, ShieldCheck, Trash2, Upload, UserRound } from 'lucide-react'
 import { useRef, useState } from 'react'
+import { BRAND_ICON_URL } from '../data/assets'
+import { ResilientImage } from './ResilientImage'
 
-const defaultAvatarUrl = '/lumora-assets/brand/lumora-mark.png'
+const defaultAvatarUrl = BRAND_ICON_URL
 
 async function prepareAvatar(file) {
   if (!file?.type.startsWith('image/')) throw new Error('请选择图片文件。')
@@ -113,7 +115,7 @@ export function AccountView({ account, chat, mailbox }) {
       <div className="account-grid">
         <form className="paper-panel profile-editor" onSubmit={saveProfile}>
           <div className="profile-avatar-editor">
-            <img alt="当前用户头像" src={avatarDataUrl || defaultAvatarUrl} />
+            <ResilientImage alt="当前用户头像" loading="eager" src={avatarDataUrl || defaultAvatarUrl} />
             <button aria-label="上传头像" className="avatar-upload-button" onClick={() => avatarRef.current?.click()} title="上传头像" type="button"><Camera size={19} /></button>
             <input accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => { selectAvatar(event.target.files?.[0]); event.target.value = '' }} ref={avatarRef} type="file" />
           </div>

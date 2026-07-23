@@ -2,6 +2,7 @@ import { CalendarDays, Check, Mail, PenLine, Send, Stamp } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { letterFontOptions, moodOptions, stationeryOptions } from '../data/lumora'
 import { getSpirit } from '../data/lumora'
+import { ResilientImage } from './ResilientImage'
 import { SpiritAsset } from './SpiritAsset'
 
 function dateKey(year, month, day) {
@@ -90,7 +91,7 @@ function LetterWriter({ mailbox, selectedSpiritId }) {
         <div className="field-label">今天是什么心情？</div>
         <div className="compact-mood-picker">{moodOptions.map((mood) => <button className={moodId === mood.id ? 'is-selected' : ''} key={mood.id} onClick={() => setMoodId(mood.id)} style={{ '--mood-color': mood.color }} type="button">{mood.label}</button>)}</div>
         <div className="letter-paper" style={{ '--paper-accent': style.accent }}>
-          {style.image ? <img alt="" src={style.image} /> : <div className="generated-style-placeholder"><Stamp size={42} /><strong>{style.label}</strong><span>{style.group}</span></div>}
+          {style.image ? <ResilientImage alt="" fetchPriority="high" loading="eager" src={style.image} /> : <div className="generated-style-placeholder"><Stamp size={42} /><strong>{style.label}</strong><span>{style.group}</span></div>}
           <div className={`letter-writing ${font.className}`}>
             <span>To {recipient.name}</span>
             <textarea aria-label="信件正文" onChange={(event) => setContent(event.target.value)} placeholder="今天发生了什么？慢慢写就好…" rows="9" value={content} />
@@ -99,7 +100,7 @@ function LetterWriter({ mailbox, selectedSpiritId }) {
         <div className="letter-actions"><button className="secondary-button" disabled={!content.trim()} onClick={() => save('kept')} type="button">留在信箱</button><button className="primary-button" disabled={!content.trim()} onClick={() => save('sent')} type="button"><Send size={17} />{sent ? '已寄出' : `寄给 ${recipient.name}`}</button></div>
       </section>
       <aside className="letter-options">
-        <div className="option-block"><strong>信封款式</strong><div className="stationery-grid">{stationeryOptions.map((item) => <button className={stationeryId === item.id ? 'is-selected' : ''} key={item.id} onClick={() => setStationeryId(item.id)} style={{ '--style-color': item.accent }} type="button">{item.image ? <img alt="" src={item.image} /> : <span className="style-swatch" />}<small>{item.label}</small></button>)}</div></div>
+        <div className="option-block"><strong>信封款式</strong><div className="stationery-grid">{stationeryOptions.map((item) => <button className={stationeryId === item.id ? 'is-selected' : ''} key={item.id} onClick={() => setStationeryId(item.id)} style={{ '--style-color': item.accent }} type="button">{item.image ? <ResilientImage alt="" src={item.image} /> : <span className="style-swatch" />}<small>{item.label}</small></button>)}</div></div>
         <div className="option-block"><strong>信件字体</strong><div className="font-options">{letterFontOptions.map((item) => <button className={`${item.className} ${fontId === item.id ? 'is-selected' : ''}`} key={item.id} onClick={() => setFontId(item.id)} type="button">{item.label}</button>)}</div></div>
       </aside>
     </div>

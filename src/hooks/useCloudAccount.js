@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { BRAND_ICON_URL } from '../data/assets'
 import { cloudService } from '../services/cloudService'
 
 const profileStorageKey = 'lumora-profile:v1'
 const defaultLocalProfile = { avatarDataUrl: null, displayName: '云栖者' }
-const defaultAvatarUrl = '/lumora-assets/brand/lumora-mark.png'
+const defaultAvatarUrl = BRAND_ICON_URL
 
 function readLocalProfile() {
   try {
