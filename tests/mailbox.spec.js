@@ -25,15 +25,40 @@ test('六种心情会切换角色状态并写入日历', async ({ page }) => {
   await expect(page.locator('.calendar-day-detail').getByText('今天需要慢一点。')).toBeVisible()
 })
 
-test('信件保存收件精灵、信封、字体与寄送状态', async ({ page }) => {
+test('信件保存收件精灵、信纸、字体与寄送状态', async ({ page }) => {
   await page.getByRole('button', { name: '写一封信' }).click()
   await expect(page.locator('.stationery-grid img')).toHaveCount(12)
   await expect.poll(() => page.locator('.stationery-grid img').evaluateAll((images) => images.every((image) => image.complete && image.naturalWidth > 0))).toBe(true)
   await page.locator('.recipient-row').getByRole('button', { name: /Nox/ }).click()
   await page.getByRole('button', { name: '星夜手札' }).click()
+  await expect(page.locator('.letter-paper > img')).toHaveAttribute('src', /lumora-assets\/stationery\/starry-journal\.webp/)
+  await expect(page.locator('.letter-writing')).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
   await page.getByRole('button', { name: '书信仿宋' }).click()
   await page.getByLabel('信件正文').fill('今晚想把这份疲惫交给云朵。')
   await page.getByRole('button', { name: '寄给 Nox' }).click()
   const stored = await page.evaluate(() => JSON.parse(window.localStorage.getItem('lumora-mailbox:v2')))
   expect(stored.letters.at(-1)).toMatchObject({ recipientSpiritId: 'nox', stationeryId: 'starry-journal', fontId: 'serif', delivery: 'sent', status: 'pending' })
+})
+
+test('mobile letter composer stays within the viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.locator('.segmented-control button').nth(1).click()
+  await expect(page.locator('.letter-paper')).toBeVisible()
+
+  const layout = await page.evaluate(() => {
+    const viewportWidth = window.innerWidth
+    const boxes = ['.letter-layout', '.letter-options', '.letter-compose-panel', '.letter-paper']
+      .map((selector) => document.querySelector(selector)?.getBoundingClientRect())
+    return {
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth,
+      boxes: boxes.map((box) => box && ({ left: box.left, right: box.right })),
+    }
+  })
+
+  expect(layout.documentWidth).toBeLessThanOrEqual(layout.viewportWidth)
+  for (const box of layout.boxes) {
+    expect(box.left).toBeGreaterThanOrEqual(0)
+    expect(box.right).toBeLessThanOrEqual(layout.viewportWidth)
+  }
 })

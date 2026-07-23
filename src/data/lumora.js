@@ -77,18 +77,18 @@ export const avatarMoodMap = {
 }
 
 export const stationeryOptions = [
-  { id: 'bamboo-breeze', label: '竹影清风', group: '古风信封', image: '/lumora-assets/envelopes/bamboo-breeze.webp', accent: '#77966D' },
-  { id: 'cherry-poem', label: '落樱成诗', group: '古风信封', image: '/lumora-assets/envelopes/cherry-poem.webp', accent: '#D99A9D' },
-  { id: 'mountain-mist', label: '云山烟岚', group: '古风信封', image: '/lumora-assets/envelopes/mountain-mist.webp', accent: '#7E9BAB' },
-  { id: 'brocade-cloud', label: '锦绣云纹', group: '古风信封', image: '/lumora-assets/envelopes/brocade-cloud.webp', accent: '#B49A52' },
-  { id: 'vintage-collage', label: '复古拼贴', group: '手账风信封', image: '/lumora-assets/envelopes/vintage-collage.webp', accent: '#B89D7A' },
-  { id: 'spring-letter', label: '春日来信', group: '手账风信封', image: '/lumora-assets/envelopes/spring-letter.webp', accent: '#86BB96' },
-  { id: 'starry-journal', label: '星夜手札', group: '手账风信封', image: '/lumora-assets/envelopes/starry-journal.webp', accent: '#75659D' },
-  { id: 'coffee-time', label: '咖啡时光', group: '手账风信封', image: '/lumora-assets/envelopes/coffee-time.webp', accent: '#A77854' },
-  { id: 'pizza-mood', label: '披萨心情', group: '奇幻搞怪', image: '/lumora-assets/envelopes/pizza-mood.webp', accent: '#E98D64' },
-  { id: 'unicorn-dream', label: '独角兽梦境', group: '奇幻搞怪', image: '/lumora-assets/envelopes/unicorn-dream.webp', accent: '#9B8CE5' },
-  { id: 'frog-eyes', label: '蛙蛙大眼仔', group: '奇幻搞怪', image: '/lumora-assets/envelopes/frog-eyes.webp', accent: '#80B76D' },
-  { id: 'banana-nope', label: '香蕉不呐呐', group: '奇幻搞怪', image: '/lumora-assets/envelopes/banana-nope.webp', accent: '#E4BD4E' },
+  { id: 'bamboo-breeze', label: '竹影清风', group: '东方雅致', image: '/lumora-assets/stationery/bamboo-breeze.webp', accent: '#77966D' },
+  { id: 'cherry-poem', label: '落樱成诗', group: '东方雅致', image: '/lumora-assets/stationery/cherry-poem.webp', accent: '#D99A9D' },
+  { id: 'mountain-mist', label: '云山烟岚', group: '东方雅致', image: '/lumora-assets/stationery/mountain-mist.webp', accent: '#7E9BAB' },
+  { id: 'brocade-cloud', label: '锦绣云纹', group: '东方雅致', image: '/lumora-assets/stationery/brocade-cloud.webp', accent: '#B49A52' },
+  { id: 'vintage-collage', label: '复古拼贴', group: '手账日常', image: '/lumora-assets/stationery/vintage-collage.webp', accent: '#B89D7A' },
+  { id: 'spring-letter', label: '春日来信', group: '手账日常', image: '/lumora-assets/stationery/spring-letter.webp', accent: '#86BB96' },
+  { id: 'coffee-time', label: '咖啡时光', group: '手账日常', image: '/lumora-assets/stationery/coffee-time.webp', accent: '#A77854' },
+  { id: 'starry-journal', label: '星夜手札', group: '星云奇境', image: '/lumora-assets/stationery/starry-journal.webp', accent: '#75659D' },
+  { id: 'unicorn-dream', label: '独角兽梦境', group: '星云奇境', image: '/lumora-assets/stationery/unicorn-dream.webp', accent: '#9B8CE5' },
+  { id: 'pizza-mood', label: '披萨心情', group: '轻松趣味', image: '/lumora-assets/stationery/pizza-mood.webp', accent: '#E98D64' },
+  { id: 'frog-eyes', label: '蛙蛙大眼仔', group: '轻松趣味', image: '/lumora-assets/stationery/frog-eyes.webp', accent: '#80B76D' },
+  { id: 'banana-nope', label: '香蕉不呐呐', group: '轻松趣味', image: '/lumora-assets/stationery/banana-nope.webp', accent: '#E4BD4E' },
 ]
 
 export const letterFontOptions = [

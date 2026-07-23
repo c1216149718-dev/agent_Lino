@@ -93,14 +93,14 @@ function LetterWriter({ mailbox, selectedSpiritId }) {
         <div className="letter-paper" style={{ '--paper-accent': style.accent }}>
           {style.image ? <ResilientImage alt="" fetchPriority="high" loading="eager" src={style.image} /> : <div className="generated-style-placeholder"><Stamp size={42} /><strong>{style.label}</strong><span>{style.group}</span></div>}
           <div className={`letter-writing ${font.className}`}>
-            <span>To {recipient.name}</span>
+            <div className="letter-heading"><span>To {recipient.name}</span><time>{new Date().toLocaleDateString('zh-CN')}</time></div>
             <textarea aria-label="信件正文" onChange={(event) => setContent(event.target.value)} placeholder="今天发生了什么？慢慢写就好…" rows="9" value={content} />
           </div>
         </div>
         <div className="letter-actions"><button className="secondary-button" disabled={!content.trim()} onClick={() => save('kept')} type="button">留在信箱</button><button className="primary-button" disabled={!content.trim()} onClick={() => save('sent')} type="button"><Send size={17} />{sent ? '已寄出' : `寄给 ${recipient.name}`}</button></div>
       </section>
       <aside className="letter-options">
-        <div className="option-block"><strong>信封款式</strong><div className="stationery-grid">{stationeryOptions.map((item) => <button className={stationeryId === item.id ? 'is-selected' : ''} key={item.id} onClick={() => setStationeryId(item.id)} style={{ '--style-color': item.accent }} type="button">{item.image ? <ResilientImage alt="" src={item.image} /> : <span className="style-swatch" />}<small>{item.label}</small></button>)}</div></div>
+        <div className="option-block"><strong>信纸款式</strong><div className="stationery-grid">{stationeryOptions.map((item) => <button aria-label={`选择信纸：${item.label}`} className={stationeryId === item.id ? 'is-selected' : ''} key={item.id} onClick={() => setStationeryId(item.id)} style={{ '--style-color': item.accent }} type="button">{item.image ? <ResilientImage alt="" src={item.image} /> : <span className="style-swatch" />}<small>{item.label}</small></button>)}</div></div>
         <div className="option-block"><strong>信件字体</strong><div className="font-options">{letterFontOptions.map((item) => <button className={`${item.className} ${fontId === item.id ? 'is-selected' : ''}`} key={item.id} onClick={() => setFontId(item.id)} type="button">{item.label}</button>)}</div></div>
       </aside>
     </div>
