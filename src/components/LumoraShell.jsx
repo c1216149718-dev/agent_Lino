@@ -9,6 +9,7 @@ import { ChatView } from './ChatView'
 import { CloudTransition } from './CloudTransition'
 import { ConversationSidebar } from './ConversationSidebar'
 import { MemoryView } from './MemoryView'
+import { LumoraAtmosphere } from './LumoraAtmosphere'
 import { RecordView } from './RecordView'
 import { ResilientImage } from './ResilientImage'
 import { SpiritAsset } from './SpiritAsset'
@@ -93,6 +94,7 @@ export function LumoraShell({ account, chat, mailbox }) {
 
   return (
     <div className="lumora-app" style={{ '--current-spirit': selectedSpirit.color, '--current-soft': selectedSpirit.soft }}>
+      <LumoraAtmosphere />
       <header className="site-header">
         <button className="mobile-menu-button" aria-label="打开导航" onClick={() => setDrawerOpen(true)} type="button"><Menu size={23} /></button>
         <button className="brand-button" onClick={() => navigate('chat')} type="button"><Brand /></button>
