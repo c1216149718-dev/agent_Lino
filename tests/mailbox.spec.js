@@ -31,7 +31,7 @@ test('信件保存收件精灵、信纸、字体与寄送状态', async ({ page 
   await expect.poll(() => page.locator('.stationery-grid img').evaluateAll((images) => images.every((image) => image.complete && image.naturalWidth > 0))).toBe(true)
   await page.locator('.recipient-row').getByRole('button', { name: /Nox/ }).click()
   await page.getByRole('button', { name: '星夜手札' }).click()
-  await expect(page.locator('.letter-paper > img')).toHaveAttribute('src', /lumora-assets\/stationery\/starry-journal\.webp/)
+  await expect(page.locator('.letter-paper-art-top')).toHaveAttribute('src', /lumora-assets\/stationery\/starry-journal\.webp/)
   await expect(page.locator('.letter-writing')).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
   await page.getByRole('button', { name: '书信仿宋' }).click()
   await page.getByLabel('信件正文').fill('今晚想把这份疲惫交给云朵。')
@@ -61,4 +61,23 @@ test('mobile letter composer stays within the viewport', async ({ page }) => {
     expect(box.left).toBeGreaterThanOrEqual(0)
     expect(box.right).toBeLessThanOrEqual(layout.viewportWidth)
   }
+})
+
+test('letter paper grows before the outer scrollbar appears', async ({ page }) => {
+  await page.getByRole('button', { name: '写一封信' }).click()
+  const scrollShell = page.locator('.letter-paper-scroll')
+  const shortState = await scrollShell.evaluate((element) => ({
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+  }))
+  expect(shortState.scrollHeight).toBeLessThanOrEqual(shortState.clientHeight + 1)
+
+  await page.getByLabel('信件正文').fill('把今天慢慢写下来。'.repeat(700))
+  const longState = await scrollShell.evaluate((element) => ({
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+  }))
+  expect(longState.scrollHeight).toBeGreaterThan(longState.clientHeight)
+  await expect(page.locator('.letter-paper-art-top')).toBeVisible()
+  await expect(page.locator('.letter-paper-art-bottom')).toBeVisible()
 })

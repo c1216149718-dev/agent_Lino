@@ -1,5 +1,5 @@
 import { CalendarDays, Check, Mail, PenLine, Send, Stamp } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { letterFontOptions, moodOptions, stationeryOptions } from '../data/lumora'
 import { getSpirit } from '../data/lumora'
 import { ResilientImage } from './ResilientImage'
@@ -63,6 +63,28 @@ function MoodWriter({ mailbox, selectedSpiritId }) {
   )
 }
 
+function ExpandingLetterTextarea({ fontId, onChange, value }) {
+  const textareaRef = useRef(null)
+
+  useLayoutEffect(() => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+    textarea.style.height = 'auto'
+    textarea.style.height = `${Math.max(textarea.scrollHeight, 460)}px`
+  }, [fontId, value])
+
+  return (
+    <textarea
+      aria-label="信件正文"
+      onChange={(event) => onChange(event.target.value)}
+      placeholder="今天发生了什么？慢慢写就好…"
+      ref={textareaRef}
+      rows="9"
+      value={value}
+    />
+  )
+}
+
 function LetterWriter({ mailbox, selectedSpiritId }) {
   const [content, setContent] = useState('')
   const [moodId, setMoodId] = useState('calm')
@@ -90,11 +112,21 @@ function LetterWriter({ mailbox, selectedSpiritId }) {
         </div>
         <div className="field-label">今天是什么心情？</div>
         <div className="compact-mood-picker">{moodOptions.map((mood) => <button className={moodId === mood.id ? 'is-selected' : ''} key={mood.id} onClick={() => setMoodId(mood.id)} style={{ '--mood-color': mood.color }} type="button">{mood.label}</button>)}</div>
-        <div className="letter-paper" style={{ '--paper-accent': style.accent }}>
-          {style.image ? <ResilientImage alt="" fetchPriority="high" loading="eager" src={style.image} /> : <div className="generated-style-placeholder"><Stamp size={42} /><strong>{style.label}</strong><span>{style.group}</span></div>}
-          <div className={`letter-writing ${font.className}`}>
-            <div className="letter-heading"><span>To {recipient.name}</span><time>{new Date().toLocaleDateString('zh-CN')}</time></div>
-            <textarea aria-label="信件正文" onChange={(event) => setContent(event.target.value)} placeholder="今天发生了什么？慢慢写就好…" rows="9" value={content} />
+        <div className="letter-paper-scroll">
+          <div className="letter-paper" style={{ '--paper-accent': style.accent }}>
+            {style.image ? (
+              <div className="letter-paper-art" aria-hidden="true">
+                <ResilientImage className="letter-paper-art-top" alt="" fetchPriority="high" loading="eager" src={style.image} />
+                <div className="letter-paper-art-middle">
+                  <ResilientImage alt="" loading="eager" src={style.image} />
+                </div>
+                <ResilientImage className="letter-paper-art-bottom" alt="" loading="eager" src={style.image} />
+              </div>
+            ) : <div className="generated-style-placeholder"><Stamp size={42} /><strong>{style.label}</strong><span>{style.group}</span></div>}
+            <div className={`letter-writing ${font.className}`}>
+              <div className="letter-heading"><span>To {recipient.name}</span><time>{new Date().toLocaleDateString('zh-CN')}</time></div>
+              <ExpandingLetterTextarea fontId={fontId} onChange={setContent} value={content} />
+            </div>
           </div>
         </div>
         <div className="letter-actions"><button className="secondary-button" disabled={!content.trim()} onClick={() => save('kept')} type="button">留在信箱</button><button className="primary-button" disabled={!content.trim()} onClick={() => save('sent')} type="button"><Send size={17} />{sent ? '已寄出' : `寄给 ${recipient.name}`}</button></div>
