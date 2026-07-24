@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="preload" as="image" href="/lumora-icon-192.png" type="image/png" fetchpriority="high" />
+    <link rel="preload" as="image" href="/lumora-assets/brand/lumora-mark.png" type="image/png" fetchpriority="high" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#FFFDF8" />
     <meta name="description" content="云栖境 Lumora 是由五位精灵陪伴你的 AI 对话、情绪记录与生活整理空间。" />
@@ -19,7 +19,12 @@
     <title>云栖境 Lumora</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div style="min-height:100vh;display:grid;place-items:center;background:#f8f7ff">
+        <img alt="" src="/lumora-assets/brand/lumora-mark.png" style="width:min(48vw,260px);height:auto;animation:lumora-first-breath 1.8s ease-in-out infinite alternate" />
+      </div>
+    </div>
+    <style>@keyframes lumora-first-breath{to{transform:translateY(-5px);filter:drop-shadow(0 12px 24px rgba(126,116,184,.18))}}</style>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

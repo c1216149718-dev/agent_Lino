@@ -1,14 +1,16 @@
 import { useState } from 'react'
+import { LumoraBootLoader } from './components/LumoraBootLoader'
 import { LumoraShell } from './components/LumoraShell'
 import { LumoraAtmosphere } from './components/LumoraAtmosphere'
 import { ResilientImage } from './components/ResilientImage'
 import { SpiritSelectPage } from './components/SpiritSelectPage'
 import { BRAND_ICON_URL } from './data/assets'
 import { useCloudAccount } from './hooks/useCloudAccount'
+import { useLumoraBoot } from './hooks/useLumoraBoot'
 import { useLumoraStore } from './hooks/useLumoraStore'
 import { useMailbox } from './hooks/useMailbox'
 
-function App() {
+function LumoraApp() {
   const chat = useLumoraStore()
   const mailbox = useMailbox()
   const account = useCloudAccount({ chat, mailbox })
@@ -26,6 +28,14 @@ function App() {
   }
 
   return <LumoraShell account={account} chat={chat} mailbox={mailbox} />
+}
+
+function App() {
+  const ready = useLumoraBoot()
+
+  if (!ready) return <LumoraBootLoader />
+
+  return <LumoraApp />
 }
 
 export default App

@@ -33,6 +33,41 @@ img { max-width: 100%; }
 .lumora-app::after, .onboarding-shell::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .52; background: radial-gradient(ellipse 88px 35px at 16% 34%, transparent 58%, rgba(174,197,229,.2) 60% 62%, transparent 64%), radial-gradient(ellipse 112px 42px at 78% 68%, transparent 58%, rgba(188,178,225,.18) 60% 62%, transparent 64%), linear-gradient(110deg, rgba(255,255,255,.32), transparent 32%, rgba(227,222,250,.2) 67%, transparent 84%); }
 .lumora-app > *, .onboarding-shell > * { position: relative; z-index: 1; }
 
+.lumora-boot { position: fixed; inset: 0; z-index: 1000; min-height: 100svh; display: grid; place-items: center; align-content: center; gap: 18px; overflow: hidden; background: radial-gradient(circle at 50% 43%, rgba(255,253,227,.96) 0 8%, rgba(235,238,255,.9) 29%, transparent 52%), linear-gradient(180deg, #fffdf8 0%, #f4f7ff 54%, #f2efff 100%); isolation: isolate; }
+.lumora-boot::before, .lumora-boot::after { content: ""; position: absolute; z-index: -1; width: 520px; height: 180px; opacity: .6; background: radial-gradient(ellipse 110px 68px at 17% 70%, rgba(224,237,251,.88) 0 68%, transparent 70%), radial-gradient(ellipse 142px 88px at 42% 58%, rgba(239,241,255,.94) 0 68%, transparent 70%), radial-gradient(ellipse 126px 74px at 68% 68%, rgba(230,236,252,.9) 0 68%, transparent 70%), radial-gradient(ellipse 94px 55px at 86% 76%, rgba(244,235,255,.86) 0 68%, transparent 70%); filter: drop-shadow(0 0 18px rgba(146,180,235,.18)); }
+.lumora-boot::before { left: -130px; top: 18%; animation: boot-bank-left 5.8s ease-in-out infinite alternate; }
+.lumora-boot::after { right: -120px; bottom: 13%; transform: scale(.9); animation: boot-bank-right 6.6s ease-in-out infinite alternate; }
+.boot-moon-halo { position: absolute; z-index: -1; width: min(72vw, 560px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, rgba(255,248,197,.3) 0 18%, rgba(188,207,255,.18) 42%, transparent 68%); animation: boot-halo 3.4s ease-in-out infinite alternate; }
+.boot-mark-wrap { position: relative; width: min(66vw, 330px); aspect-ratio: 1; animation: boot-mark-float 2.8s ease-in-out infinite alternate; }
+.boot-mark { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 20px 30px rgba(104,96,158,.15)); }
+.boot-gear-backdrop, .boot-gear { position: absolute; left: 70.5%; top: 34.5%; width: 24.5%; aspect-ratio: 1; border-radius: 50%; }
+.boot-gear-backdrop { background: radial-gradient(circle, #fff9e9 0 53%, #efc67d 55% 61%, #fff1cc 63% 74%, transparent 76%); box-shadow: 0 0 16px rgba(239,195,112,.24); }
+.boot-gear { display: block; background: repeating-conic-gradient(from 0deg, #e8b96c 0 7deg, #ffe7ae 7deg 14deg, transparent 14deg 30deg), radial-gradient(circle, transparent 0 48%, #efc67d 49% 59%, transparent 60%); animation: boot-gear-turn 4.8s linear infinite; }
+.boot-gear::before { content: ""; position: absolute; inset: 20%; border: 2px solid rgba(199,139,70,.52); border-radius: 50%; background: rgba(255,251,235,.92); }
+.boot-clock-hand { position: absolute; z-index: 2; left: 50%; top: 50%; width: 2px; height: 23%; border-radius: 2px; background: #c78b53; transform-origin: 50% 100%; }
+.boot-clock-hour { transform: translate(-50%, -100%) rotate(1deg); }
+.boot-clock-minute { height: 28%; transform: translate(-50%, -100%) rotate(44deg); }
+.boot-star { position: absolute; width: 10px; height: 10px; border-radius: 2px 70% 2px 70%; background: #fff5bc; box-shadow: 0 0 12px rgba(255,225,113,.8), 0 0 24px rgba(171,194,255,.42); transform: rotate(45deg); animation: boot-star-twinkle 1.7s ease-in-out infinite; }
+.boot-star-one { left: 48%; top: 9%; width: 15px; height: 15px; }
+.boot-star-two { left: 35%; top: 30%; animation-delay: -.65s; }
+.boot-star-three { left: 51%; top: 48%; width: 7px; height: 7px; animation-delay: -1.05s; }
+.boot-cloud-curl { position: absolute; width: 54px; height: 34px; border: 4px solid rgba(135,137,204,.7); border-left-color: transparent; border-radius: 50%; filter: drop-shadow(0 0 8px rgba(142,186,242,.42)); animation: boot-cloud-roll 2.4s ease-in-out infinite; }
+.boot-cloud-curl-left { left: 15%; bottom: 18%; }
+.boot-cloud-curl-right { right: 34%; bottom: 4%; width: 44px; height: 28px; animation-delay: -1.2s; }
+.boot-copy { display: grid; justify-items: center; gap: 5px; color: #5f5792; }
+.boot-copy strong { font-size: 22px; }
+.boot-copy span { color: #88809b; font-size: 13px; }
+.boot-progress { width: min(48vw, 210px); height: 4px; overflow: hidden; border-radius: 4px; background: rgba(143,135,190,.14); }
+.boot-progress span { display: block; width: 42%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #c9dfff, #9a88d7, #f0cf78); animation: boot-progress 1.45s ease-in-out infinite; }
+@keyframes boot-bank-left { to { transform: translate3d(54px, 8px, 0); } }
+@keyframes boot-bank-right { to { transform: translate3d(-58px, -8px, 0) scale(.9); } }
+@keyframes boot-halo { to { opacity: .58; transform: scale(1.08); } }
+@keyframes boot-mark-float { to { transform: translateY(-8px) scale(1.012); } }
+@keyframes boot-gear-turn { to { transform: rotate(360deg); } }
+@keyframes boot-star-twinkle { 0%, 100% { opacity: .28; transform: rotate(45deg) scale(.65); } 50% { opacity: 1; transform: rotate(45deg) scale(1.2); } }
+@keyframes boot-cloud-roll { 0%, 100% { opacity: .35; transform: translateX(-5px) rotate(-8deg) scaleX(.82); } 50% { opacity: .9; transform: translateX(7px) rotate(8deg) scaleX(1.08); } }
+@keyframes boot-progress { 0% { transform: translateX(-115%); } 100% { transform: translateX(340%); } }
+
 .lumora-atmosphere { position: fixed !important; inset: 0; z-index: 0 !important; pointer-events: none; overflow: hidden; }
 .moon-glow { position: absolute; top: 54px; right: 4vw; width: 420px; height: 420px; border-radius: 50%; opacity: .66; background: radial-gradient(circle, rgba(255,252,225,.78) 0 8%, rgba(232,226,255,.42) 23%, rgba(219,232,255,.18) 48%, transparent 70%); transform: translate3d(0,0,0); animation: moon-breathe 10s ease-in-out infinite alternate; }
 .cloud-bank { position: absolute; width: 460px; height: 150px; opacity: .62; filter: drop-shadow(0 10px 24px rgba(116,143,190,.12)) drop-shadow(0 0 12px rgba(176,193,242,.1)); background: radial-gradient(ellipse 96px 61px at 18% 72%, rgba(218,235,250,.88) 0 69%, transparent 71%), radial-gradient(ellipse 126px 80px at 39% 58%, rgba(237,241,255,.94) 0 69%, transparent 71%), radial-gradient(ellipse 112px 67px at 62% 68%, rgba(224,237,252,.92) 0 69%, transparent 71%), radial-gradient(ellipse 90px 52px at 81% 76%, rgba(243,235,255,.88) 0 69%, transparent 71%); }
@@ -51,6 +86,11 @@ img { max-width: 100%; }
 @keyframes cloud-drift-right { to { transform: translate3d(-38px, -6px, 0) scale(.9); } }
 @keyframes cloud-drift-low { to { transform: translate3d(42px, -8px, 0) scale(1.25); } }
 @keyframes sparkle-breathe { 0%, 100% { opacity: .22; transform: rotate(45deg) scale(.72); } 50% { opacity: .9; transform: rotate(45deg) scale(1.18); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .lumora-boot::before, .lumora-boot::after, .boot-moon-halo, .boot-mark-wrap, .boot-gear, .boot-star, .boot-cloud-curl, .boot-progress span { animation: none !important; }
+  .boot-progress span { width: 100%; opacity: .55; }
+}
 
 .site-header { height: 72px; position: sticky; top: 0; z-index: 35; display: grid; grid-template-columns: minmax(210px, 1fr) auto minmax(210px, 1fr); align-items: center; padding: 0 30px; border-bottom: 1px solid rgba(194,196,222,.72); background: rgba(255,253,249,.86); box-shadow: 0 8px 28px rgba(112,101,153,.06); backdrop-filter: blur(18px); }
 .brand-button { border: 0; background: transparent; padding: 0; justify-self: start; cursor: pointer; }
