@@ -266,23 +266,21 @@ img { max-width: 100%; }
 .compact-mood-picker { display: flex; flex-wrap: wrap; gap: 6px; }
 .compact-mood-picker button { height: 32px; border: 1px solid #ddd2c8; border-radius: 8px; background: white; padding: 0 12px; cursor: pointer; }
 .compact-mood-picker button.is-selected { border-color: var(--mood-color); box-shadow: inset 0 -3px 0 var(--mood-color); }
-.letter-paper-scroll { max-height: 920px; margin-top: 18px; padding-right: 12px; overflow-x: hidden; overflow-y: auto; scrollbar-gutter: stable; scrollbar-color: rgba(117,101,157,.52) transparent; scrollbar-width: thin; }
-.letter-paper-scroll::-webkit-scrollbar { width: 5px; }
-.letter-paper-scroll::-webkit-scrollbar-track { background: transparent; }
-.letter-paper-scroll::-webkit-scrollbar-thumb { border-radius: 5px; background: rgba(117,101,157,.48); }
-.letter-paper-scroll::-webkit-scrollbar-thumb:hover { background: rgba(97,82,140,.7); }
-.letter-paper { position: relative; min-height: 680px; border: 1px solid color-mix(in srgb, var(--paper-accent) 58%, #fff); border-radius: 8px; background: #fffdf4; overflow: hidden; box-shadow: 0 18px 34px rgba(78,60,38,.12); }
-.letter-paper-art { position: absolute; inset: 0; z-index: 0; display: grid; grid-template-rows: clamp(190px, 31%, 250px) minmax(0,1fr) clamp(175px, 29%, 230px); pointer-events: none; }
-.letter-paper-art-top, .letter-paper-art-bottom { width: 100%; height: calc(100% + 2px); object-fit: cover; }
-.letter-paper-art-top { object-position: center top; }
-.letter-paper-art-bottom { align-self: end; object-position: center bottom; }
-.letter-paper-art-middle { position: relative; margin-block: -2px; overflow: hidden; background: #fffdf4; }
-.letter-paper-art-middle img { position: absolute; top: 50%; left: 0; width: 100%; height: 320%; object-fit: cover; object-position: center; transform: translateY(-50%); }
+.letter-paper-stage { width: min(100%, 760px); margin: 18px auto 0; padding-right: 18px; }
+.letter-paper { position: relative; container-type: inline-size; min-height: 790px; border-radius: 8px; background: var(--paper-color); box-shadow: 0 18px 34px rgba(78,60,38,.12); }
+.letter-paper-surface { position: absolute; inset: 0; z-index: 0; box-sizing: border-box; border-style: solid; border-width: var(--paper-cap-top) var(--paper-cap-right) var(--paper-cap-bottom) var(--paper-cap-left); border-image-source: var(--paper-image); border-image-slice: var(--paper-slice) fill; border-image-width: 1; border-image-repeat: stretch; pointer-events: none; }
 .generated-style-placeholder { display: grid; place-items: center; align-content: start; gap: 8px; padding-top: 55px; color: var(--paper-accent); background: color-mix(in srgb, var(--paper-accent) 16%, #fffdf4); }
-.letter-writing { position: relative; z-index: 2; width: calc(100% - 132px); min-height: 530px; margin: 76px auto 42px; padding: 0; border: 0; background: transparent; box-shadow: none; }
+.letter-writing { --letter-writing-inline: clamp(46px, 8cqw, 72px); position: relative; z-index: 2; width: 100%; min-height: 790px; padding: max(116px, var(--paper-cap-top)) var(--letter-writing-inline) max(90px, calc(var(--paper-cap-bottom) * .88)); border: 0; background: transparent; box-shadow: none; }
 .letter-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 38px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid color-mix(in srgb, var(--paper-accent) 28%, transparent); color: #6e625b; }
 .letter-heading time { font-size: 12px; opacity: .75; }
-.letter-writing textarea { display: block; width: 100%; min-height: 460px; padding: 2px 0; border: 0; outline: none; overflow: hidden; resize: none; color: #403a36; background: transparent; line-height: 32px; }
+.letter-textarea-shell { position: relative; }
+.letter-writing textarea { display: block; width: 100%; min-height: 430px; max-height: 560px; padding: 2px 0; border: 0; outline: none; overflow: hidden; resize: none; color: #403a36; background: transparent; line-height: 32px; scrollbar-width: none; }
+.letter-writing textarea::-webkit-scrollbar { width: 0; height: 0; }
+.letter-scrollbar { position: absolute; top: 8px; right: calc((var(--letter-writing-inline) + 10px) * -1); bottom: 8px; width: 3px; border-radius: 999px; background: color-mix(in srgb, var(--paper-accent) 16%, transparent); opacity: 0; pointer-events: none; transition: opacity .2s ease, background .2s ease; }
+.letter-scrollbar.is-visible { opacity: 1; pointer-events: auto; }
+.letter-scrollbar:focus-visible { outline: 2px solid color-mix(in srgb, var(--paper-accent) 50%, transparent); outline-offset: 4px; }
+.letter-scrollbar-thumb { position: absolute; left: 0; width: 3px; min-height: 26px; border-radius: 999px; background: color-mix(in srgb, var(--paper-accent) 72%, #69606e); cursor: grab; box-shadow: 0 0 0 1px rgba(255,255,255,.62); }
+.letter-scrollbar-thumb:active { cursor: grabbing; }
 .letter-font-wenkai { font-family: KaiTi, STKaiti, "Noto Serif SC", serif; }
 .letter-font-cute { font-family: "Zen Maru Gothic", sans-serif; }
 .letter-font-serif { font-family: "Noto Serif SC", serif; }
@@ -478,11 +476,11 @@ img { max-width: 100%; }
   .mood-picker img { width: 43px; height: 43px; }
   .segmented-control { width: 100%; overflow-x: auto; }
   .segmented-control button { flex: 1 0 auto; padding: 0 12px; }
-  .letter-paper-scroll { max-height: 740px; padding-right: 8px; }
-  .letter-paper { min-height: 590px; }
-  .letter-paper-art { grid-template-rows: clamp(150px, 29%, 205px) minmax(0,1fr) clamp(140px, 27%, 190px); }
-  .letter-writing { width: calc(100% - 72px); min-height: 470px; margin: 62px auto 28px; padding: 0; }
-  .letter-writing textarea { min-height: 400px; }
+  .letter-paper-stage { width: 100%; padding-right: 13px; }
+  .letter-paper { min-height: 650px; }
+  .letter-writing { --letter-writing-inline: clamp(29px, 9cqw, 40px); min-height: 650px; padding-top: max(90px, var(--paper-cap-top)); padding-bottom: max(75px, calc(var(--paper-cap-bottom) * .88)); }
+  .letter-writing textarea { min-height: 350px; max-height: 440px; line-height: 30px; }
+  .letter-scrollbar { right: calc((var(--letter-writing-inline) + 8px) * -1); }
   .letter-actions { display: grid; grid-template-columns: 1fr 1fr; }
   .letter-actions button { min-width: 0; padding-inline: 9px; font-size: 12px; }
   .letter-layout, .letter-compose-panel, .letter-options { width: 100%; max-width: 100%; }

@@ -1,5 +1,5 @@
 import { CalendarDays, Check, Mail, PenLine, Send, Stamp } from 'lucide-react'
-import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { letterFontOptions, moodOptions, stationeryOptions } from '../data/lumora'
 import { getSpirit } from '../data/lumora'
 import { ResilientImage } from './ResilientImage'
@@ -65,23 +65,137 @@ function MoodWriter({ mailbox, selectedSpiritId }) {
 
 function ExpandingLetterTextarea({ fontId, onChange, value }) {
   const textareaRef = useRef(null)
+  const [scrollbar, setScrollbar] = useState({ visible: false, size: 100, offset: 0, progress: 0 })
+
+  const syncScrollbar = useCallback(() => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+    const scrollRange = textarea.scrollHeight - textarea.clientHeight
+    const visible = scrollRange > 2
+    const size = visible ? Math.max(12, (textarea.clientHeight / textarea.scrollHeight) * 100) : 100
+    const progress = visible ? (textarea.scrollTop / scrollRange) * 100 : 0
+    const offset = visible ? (progress / 100) * (100 - size) : 0
+    setScrollbar((current) => (
+      current.visible === visible
+      && Math.abs(current.size - size) < 0.1
+      && Math.abs(current.offset - offset) < 0.1
+      && Math.abs(current.progress - progress) < 0.1
+        ? current
+        : { visible, size, offset, progress }
+    ))
+  }, [])
 
   useLayoutEffect(() => {
     const textarea = textareaRef.current
     if (!textarea) return
     textarea.style.height = 'auto'
-    textarea.style.height = `${Math.max(textarea.scrollHeight, 460)}px`
-  }, [fontId, value])
+    const styles = window.getComputedStyle(textarea)
+    const minHeight = Number.parseFloat(styles.minHeight) || 430
+    const maxHeight = Number.parseFloat(styles.maxHeight) || 620
+    const nextHeight = Math.min(maxHeight, Math.max(minHeight, textarea.scrollHeight))
+    textarea.style.height = `${nextHeight}px`
+    textarea.style.overflowY = textarea.scrollHeight > nextHeight + 2 ? 'auto' : 'hidden'
+    if (!value) textarea.scrollTop = 0
+    window.requestAnimationFrame(syncScrollbar)
+  }, [fontId, syncScrollbar, value])
+
+  useEffect(() => {
+    const handleResize = () => {
+      const textarea = textareaRef.current
+      if (!textarea) return
+      textarea.style.height = 'auto'
+      const styles = window.getComputedStyle(textarea)
+      const minHeight = Number.parseFloat(styles.minHeight) || 430
+      const maxHeight = Number.parseFloat(styles.maxHeight) || 620
+      textarea.style.height = `${Math.min(maxHeight, Math.max(minHeight, textarea.scrollHeight))}px`
+      syncScrollbar()
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [syncScrollbar])
+
+  const moveFromTrack = (clientY, track) => {
+    const textarea = textareaRef.current
+    if (!textarea || !track) return
+    const bounds = track.getBoundingClientRect()
+    const ratio = Math.min(1, Math.max(0, (clientY - bounds.top) / bounds.height))
+    textarea.scrollTop = ratio * (textarea.scrollHeight - textarea.clientHeight)
+    syncScrollbar()
+  }
+
+  const startThumbDrag = (event) => {
+    const textarea = textareaRef.current
+    const thumb = event.currentTarget
+    const track = thumb.parentElement
+    if (!textarea || !track) return
+    event.preventDefault()
+    const startY = event.clientY
+    const startScrollTop = textarea.scrollTop
+    const maxScroll = textarea.scrollHeight - textarea.clientHeight
+    const maxTravel = track.clientHeight - thumb.clientHeight
+    const handleMove = (moveEvent) => {
+      textarea.scrollTop = startScrollTop + ((moveEvent.clientY - startY) / Math.max(1, maxTravel)) * maxScroll
+      syncScrollbar()
+    }
+    const handleUp = () => {
+      window.removeEventListener('pointermove', handleMove)
+      window.removeEventListener('pointerup', handleUp)
+    }
+    window.addEventListener('pointermove', handleMove)
+    window.addEventListener('pointerup', handleUp, { once: true })
+  }
+
+  const handleScrollbarKeyDown = (event) => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+    const increments = {
+      ArrowDown: 32,
+      ArrowUp: -32,
+      PageDown: textarea.clientHeight * 0.8,
+      PageUp: textarea.clientHeight * -0.8,
+      Home: -textarea.scrollHeight,
+      End: textarea.scrollHeight,
+    }
+    if (!(event.key in increments)) return
+    event.preventDefault()
+    textarea.scrollTop += increments[event.key]
+    syncScrollbar()
+  }
 
   return (
-    <textarea
-      aria-label="信件正文"
-      onChange={(event) => onChange(event.target.value)}
-      placeholder="今天发生了什么？慢慢写就好…"
-      ref={textareaRef}
-      rows="9"
-      value={value}
-    />
+    <div className="letter-textarea-shell">
+      <textarea
+        aria-label="信件正文"
+        id="letter-content"
+        onChange={(event) => onChange(event.target.value)}
+        onScroll={syncScrollbar}
+        placeholder="今天发生了什么？慢慢写就好…"
+        ref={textareaRef}
+        rows="9"
+        value={value}
+      />
+      <div
+        aria-controls="letter-content"
+        aria-label="信件正文滚动位置"
+        aria-orientation="vertical"
+        aria-valuemax="100"
+        aria-valuemin="0"
+        aria-valuenow={Math.round(scrollbar.progress)}
+        className={`letter-scrollbar ${scrollbar.visible ? 'is-visible' : ''}`}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) moveFromTrack(event.clientY, event.currentTarget)
+        }}
+        onKeyDown={handleScrollbarKeyDown}
+        role="scrollbar"
+        tabIndex={scrollbar.visible ? 0 : -1}
+      >
+        <span
+          className="letter-scrollbar-thumb"
+          onPointerDown={startThumbDrag}
+          style={{ height: `${scrollbar.size}%`, top: `${scrollbar.offset}%` }}
+        />
+      </div>
+    </div>
   )
 }
 
@@ -95,6 +209,18 @@ function LetterWriter({ mailbox, selectedSpiritId }) {
   const style = stationeryOptions.find((item) => item.id === stationeryId)
   const font = letterFontOptions.find((item) => item.id === fontId)
   const recipient = getSpirit(recipientSpiritId)
+  const [sliceTop, sliceRight, sliceBottom, sliceLeft] = style.slice || [180, 1, 220, 1]
+  const [capTop, capRight, capBottom, capLeft] = style.caps || style.slice || [180, 1, 220, 1]
+  const paperStyle = {
+    '--paper-accent': style.accent,
+    '--paper-color': style.paperColor || '#fffdf4',
+    '--paper-image': style.image ? `url("${style.image}")` : 'none',
+    '--paper-slice': `${sliceTop} ${sliceRight} ${sliceBottom} ${sliceLeft}`,
+    '--paper-cap-top': `${(capTop / 7.2).toFixed(3)}cqw`,
+    '--paper-cap-right': `${(capRight / 7.2).toFixed(3)}cqw`,
+    '--paper-cap-bottom': `${(capBottom / 7.2).toFixed(3)}cqw`,
+    '--paper-cap-left': `${(capLeft / 7.2).toFixed(3)}cqw`,
+  }
   const save = (delivery) => {
     const letter = mailbox.saveLetter({ content, delivery, fontId, moodId, recipientSpiritId, stationeryId })
     if (!letter) return
@@ -112,16 +238,10 @@ function LetterWriter({ mailbox, selectedSpiritId }) {
         </div>
         <div className="field-label">今天是什么心情？</div>
         <div className="compact-mood-picker">{moodOptions.map((mood) => <button className={moodId === mood.id ? 'is-selected' : ''} key={mood.id} onClick={() => setMoodId(mood.id)} style={{ '--mood-color': mood.color }} type="button">{mood.label}</button>)}</div>
-        <div className="letter-paper-scroll">
-          <div className="letter-paper" style={{ '--paper-accent': style.accent }}>
+        <div className="letter-paper-stage">
+          <div className="letter-paper" style={paperStyle}>
             {style.image ? (
-              <div className="letter-paper-art" aria-hidden="true">
-                <ResilientImage className="letter-paper-art-top" alt="" fetchPriority="high" loading="eager" src={style.image} />
-                <div className="letter-paper-art-middle">
-                  <ResilientImage alt="" loading="eager" src={style.image} />
-                </div>
-                <ResilientImage className="letter-paper-art-bottom" alt="" loading="eager" src={style.image} />
-              </div>
+              <div className="letter-paper-surface" aria-hidden="true" />
             ) : <div className="generated-style-placeholder"><Stamp size={42} /><strong>{style.label}</strong><span>{style.group}</span></div>}
             <div className={`letter-writing ${font.className}`}>
               <div className="letter-heading"><span>To {recipient.name}</span><time>{new Date().toLocaleDateString('zh-CN')}</time></div>

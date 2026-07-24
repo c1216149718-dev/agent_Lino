@@ -31,10 +31,10 @@ test('信件保存收件精灵、信纸、字体与寄送状态', async ({ page 
   await expect.poll(() => page.locator('.stationery-grid img').evaluateAll((images) => images.every((image) => image.complete && image.naturalWidth > 0))).toBe(true)
   await page.locator('.recipient-row').getByRole('button', { name: /Nox/ }).click()
   await page.getByRole('button', { name: '星夜手札' }).click()
-  await expect(page.locator('.letter-paper-art-top')).toHaveAttribute('src', /lumora-assets\/stationery\/starry-journal\.webp/)
+  await expect(page.locator('.letter-paper-surface')).toHaveCSS('border-image-source', /starry-journal\.webp/)
   await expect(page.locator('.letter-writing')).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
   await page.getByRole('button', { name: '书信仿宋' }).click()
-  await page.getByLabel('信件正文').fill('今晚想把这份疲惫交给云朵。')
+  await page.getByRole('textbox', { name: '信件正文' }).fill('今晚想把这份疲惫交给云朵。')
   await page.getByRole('button', { name: '寄给 Nox' }).click()
   const stored = await page.evaluate(() => JSON.parse(window.localStorage.getItem('lumora-mailbox:v2')))
   expect(stored.letters.at(-1)).toMatchObject({ recipientSpiritId: 'nox', stationeryId: 'starry-journal', fontId: 'serif', delivery: 'sent', status: 'pending' })
@@ -63,21 +63,62 @@ test('mobile letter composer stays within the viewport', async ({ page }) => {
   }
 })
 
-test('letter paper grows before the outer scrollbar appears', async ({ page }) => {
+test('letter paper grows to a stable height before the external scrollbar appears', async ({ page }) => {
   await page.getByRole('button', { name: '写一封信' }).click()
-  const scrollShell = page.locator('.letter-paper-scroll')
-  const shortState = await scrollShell.evaluate((element) => ({
-    clientHeight: element.clientHeight,
-    scrollHeight: element.scrollHeight,
+  const paper = page.locator('.letter-paper')
+  const textarea = page.getByRole('textbox', { name: '信件正文' })
+  const scrollbar = page.getByRole('scrollbar', { name: '信件正文滚动位置' })
+  const shortState = await paper.evaluate((element) => ({
+    height: element.getBoundingClientRect().height,
   }))
-  expect(shortState.scrollHeight).toBeLessThanOrEqual(shortState.clientHeight + 1)
+  await expect(scrollbar).not.toHaveClass(/is-visible/)
 
-  await page.getByLabel('信件正文').fill('把今天慢慢写下来。'.repeat(700))
-  const longState = await scrollShell.evaluate((element) => ({
-    clientHeight: element.clientHeight,
-    scrollHeight: element.scrollHeight,
+  await textarea.fill('把今天慢慢写下来。'.repeat(75))
+  const mediumState = await paper.evaluate((element) => ({
+    height: element.getBoundingClientRect().height,
   }))
-  expect(longState.scrollHeight).toBeGreaterThan(longState.clientHeight)
-  await expect(page.locator('.letter-paper-art-top')).toBeVisible()
-  await expect(page.locator('.letter-paper-art-bottom')).toBeVisible()
+  expect(mediumState.height).toBeGreaterThanOrEqual(shortState.height)
+
+  await textarea.fill('把今天慢慢写下来。'.repeat(700))
+  await expect(scrollbar).toHaveClass(/is-visible/)
+  const longState = await page.evaluate(() => {
+    const paperBox = document.querySelector('.letter-paper').getBoundingClientRect()
+    const scrollbarBox = document.querySelector('.letter-scrollbar').getBoundingClientRect()
+    const textareaElement = document.querySelector('#letter-content')
+    return {
+      documentHeight: document.documentElement.scrollHeight,
+      paperHeight: paperBox.height,
+      paperRight: paperBox.right,
+      scrollbarLeft: scrollbarBox.left,
+      textareaClientHeight: textareaElement.clientHeight,
+      textareaScrollHeight: textareaElement.scrollHeight,
+    }
+  })
+  expect(longState.paperHeight).toBeLessThan(1_100)
+  expect(longState.documentHeight).toBeLessThan(2_400)
+  expect(longState.textareaScrollHeight).toBeGreaterThan(longState.textareaClientHeight)
+  expect(longState.scrollbarLeft).toBeGreaterThan(longState.paperRight)
+  await expect(page.locator('.letter-paper-surface')).toBeVisible()
+  await scrollbar.press('End')
+  await expect(scrollbar).toHaveAttribute('aria-valuenow', /^(9[0-9]|100)$/)
+  await scrollbar.press('Home')
+  await expect(scrollbar).toHaveAttribute('aria-valuenow', '0')
+})
+
+test('all twelve stationery styles use bounded nine-slice surfaces', async ({ page }) => {
+  await page.getByRole('button', { name: '写一封信' }).click()
+  const options = page.locator('.stationery-grid button')
+  await expect(options).toHaveCount(12)
+  for (let index = 0; index < 12; index += 1) {
+    await options.nth(index).click()
+    const state = await page.locator('.letter-paper').evaluate((element) => {
+      const surface = element.querySelector('.letter-paper-surface')
+      return {
+        height: element.getBoundingClientRect().height,
+        image: window.getComputedStyle(surface).borderImageSource,
+      }
+    })
+    expect(state.height).toBeLessThan(1_100)
+    expect(state.image).toContain('/lumora-assets/stationery/')
+  }
 })

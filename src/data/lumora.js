@@ -77,18 +77,18 @@ export const avatarMoodMap = {
 }
 
 export const stationeryOptions = [
-  { id: 'bamboo-breeze', label: '竹影清风', group: '东方雅致', image: '/lumora-assets/stationery/bamboo-breeze.webp', accent: '#77966D' },
-  { id: 'cherry-poem', label: '落樱成诗', group: '东方雅致', image: '/lumora-assets/stationery/cherry-poem.webp', accent: '#D99A9D' },
-  { id: 'mountain-mist', label: '云山烟岚', group: '东方雅致', image: '/lumora-assets/stationery/mountain-mist.webp', accent: '#7E9BAB' },
-  { id: 'brocade-cloud', label: '锦绣云纹', group: '东方雅致', image: '/lumora-assets/stationery/brocade-cloud.webp', accent: '#B49A52' },
-  { id: 'vintage-collage', label: '复古拼贴', group: '手账日常', image: '/lumora-assets/stationery/vintage-collage.webp', accent: '#B89D7A' },
-  { id: 'spring-letter', label: '春日来信', group: '手账日常', image: '/lumora-assets/stationery/spring-letter.webp', accent: '#86BB96' },
-  { id: 'coffee-time', label: '咖啡时光', group: '手账日常', image: '/lumora-assets/stationery/coffee-time.webp', accent: '#A77854' },
-  { id: 'starry-journal', label: '星夜手札', group: '星云奇境', image: '/lumora-assets/stationery/starry-journal.webp', accent: '#75659D' },
-  { id: 'unicorn-dream', label: '独角兽梦境', group: '星云奇境', image: '/lumora-assets/stationery/unicorn-dream.webp', accent: '#9B8CE5' },
-  { id: 'pizza-mood', label: '披萨心情', group: '轻松趣味', image: '/lumora-assets/stationery/pizza-mood.webp', accent: '#E98D64' },
-  { id: 'frog-eyes', label: '蛙蛙大眼仔', group: '轻松趣味', image: '/lumora-assets/stationery/frog-eyes.webp', accent: '#80B76D' },
-  { id: 'banana-nope', label: '香蕉不呐呐', group: '轻松趣味', image: '/lumora-assets/stationery/banana-nope.webp', accent: '#E4BD4E' },
+  { id: 'bamboo-breeze', label: '竹影清风', group: '东方雅致', image: '/lumora-assets/stationery/bamboo-breeze.webp', accent: '#77966D', paperColor: '#FAEFDD', slice: [300, 1, 430, 1], caps: [200, 0, 250, 0] },
+  { id: 'cherry-poem', label: '落樱成诗', group: '东方雅致', image: '/lumora-assets/stationery/cherry-poem.webp', accent: '#D99A9D', paperColor: '#FAF1E6', slice: [180, 36, 190, 36], caps: [150, 24, 150, 24] },
+  { id: 'mountain-mist', label: '云山烟岚', group: '东方雅致', image: '/lumora-assets/stationery/mountain-mist.webp', accent: '#7E9BAB', paperColor: '#EEEFEE', slice: [150, 1, 430, 1], caps: [120, 0, 260, 0] },
+  { id: 'brocade-cloud', label: '锦绣云纹', group: '东方雅致', image: '/lumora-assets/stationery/brocade-cloud.webp', accent: '#B49A52', paperColor: '#FBF2DD', slice: [170, 45, 170, 45], caps: [140, 28, 140, 28] },
+  { id: 'vintage-collage', label: '复古拼贴', group: '手账日常', image: '/lumora-assets/stationery/vintage-collage.webp', accent: '#B89D7A', paperColor: '#FBF5E6', slice: [180, 1, 250, 1], caps: [150, 0, 200, 0] },
+  { id: 'spring-letter', label: '春日来信', group: '手账日常', image: '/lumora-assets/stationery/spring-letter.webp', accent: '#86BB96', paperColor: '#F6F7EE', slice: [150, 1, 350, 1], caps: [120, 0, 230, 0] },
+  { id: 'coffee-time', label: '咖啡时光', group: '手账日常', image: '/lumora-assets/stationery/coffee-time.webp', accent: '#A77854', paperColor: '#FDF4E6', slice: [190, 1, 330, 1], caps: [140, 0, 220, 0] },
+  { id: 'starry-journal', label: '星夜手札', group: '星云奇境', image: '/lumora-assets/stationery/starry-journal.webp', accent: '#75659D', paperColor: '#FBF5F5', slice: [180, 25, 230, 25], caps: [150, 18, 180, 18] },
+  { id: 'unicorn-dream', label: '独角兽梦境', group: '星云奇境', image: '/lumora-assets/stationery/unicorn-dream.webp', accent: '#9B8CE5', paperColor: '#FCFAF7', slice: [190, 30, 300, 30], caps: [150, 20, 220, 20] },
+  { id: 'pizza-mood', label: '披萨心情', group: '轻松趣味', image: '/lumora-assets/stationery/pizza-mood.webp', accent: '#E98D64', paperColor: '#FEF4D7', slice: [150, 32, 190, 32], caps: [120, 24, 150, 24] },
+  { id: 'frog-eyes', label: '蛙蛙大眼仔', group: '轻松趣味', image: '/lumora-assets/stationery/frog-eyes.webp', accent: '#80B76D', paperColor: '#F3F8DF', slice: [140, 1, 220, 1], caps: [110, 0, 170, 0] },
+  { id: 'banana-nope', label: '香蕉不呐呐', group: '轻松趣味', image: '/lumora-assets/stationery/banana-nope.webp', accent: '#E4BD4E', paperColor: '#FEF4B9', slice: [220, 30, 150, 30], caps: [180, 22, 120, 22] },
 ]
 
 export const letterFontOptions = [
